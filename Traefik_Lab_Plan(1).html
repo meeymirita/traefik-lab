@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Traefik Lab — подробное руководство</title>
+<style>
+  :root { --red: #1565c0; --red-dark: #0d3d75; --red-light: #e8f1fb; --red-mid: #b9d3ee; --ink: #1c1c1c; }
+  body { font-family: 'DejaVu Sans', 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: var(--ink); }
+  h1 { font-size: 28px; color: var(--red); margin-bottom: 4px; }
+  .subtitle { font-size: 15px; color: #555; margin-top: 0; margin-bottom: 18px; }
+  h2 { font-size: 21px; color: var(--red-dark); border-bottom: 3px solid var(--red-mid); padding-bottom: 4px; margin-top: 44px; }
+  h3 { font-size: 16px; color: #333; margin-top: 24px; margin-bottom: 6px; }
+  h4 { font-size: 14px; color: #555; margin-top: 16px; margin-bottom: 4px; }
+  p { margin: 7px 0; }
+  code { background: #f3f6fa; padding: 1px 5px; border-radius: 3px; font-family: 'DejaVu Sans Mono', Menlo, Consolas, monospace; font-size: 12.5px; }
+  pre { background: #f7fafd; border: 1px solid #d8e4f2; border-left: 4px solid var(--red); border-radius: 4px; padding: 10px 12px; font-family: 'DejaVu Sans Mono', Menlo, Consolas, monospace; font-size: 12px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0 16px 0; font-size: 12.5px; }
+  th, td { border: 1px solid #ddd; padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: var(--red-light); color: var(--red-dark); }
+  tr:nth-child(even) td { background: #fafafa; }
+  ul, ol { margin: 4px 0 10px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  .tag { display: inline-block; color: #fff; font-size: 11px; font-weight: bold; padding: 1px 8px; border-radius: 3px; margin-bottom: 5px; }
+  .insight-box { background: var(--red-light); border: 1px solid var(--red-mid); border-left: 5px solid var(--red); border-radius: 4px; padding: 8px 14px; margin: 12px 0; }
+  .insight-box .tag { background: var(--red); }
+  .fix-box { background: #f1faf3; border: 1px solid #bfe4c7; border-left: 5px solid #2f9e4a; border-radius: 4px; padding: 8px 14px; margin: 6px 0 14px 0; }
+  .fix-box .tag { background: #2f9e4a; }
+  .note-box { background: #f4f4f6; border: 1px solid #d9d9e0; border-left: 5px solid #555a6e; border-radius: 4px; padding: 8px 14px; margin: 12px 0; }
+  .note-box .tag { background: #555a6e; }
+  .next-box { background: #fff8e6; border: 1px solid #f0dca0; border-left: 5px solid #e0a800; border-radius: 4px; padding: 8px 14px; margin: 14px 0 6px 0; font-size: 13px; }
+  .next-box .tag { background: #e0a800; color: #3a2a00; }
+  .next-box ul { margin: 4px 0 2px 0; }
+  details.deep { border: 1px dashed var(--red-mid); border-radius: 4px; margin: 12px 0; background: #fff; }
+  details.deep summary { cursor: pointer; padding: 8px 14px; font-weight: bold; color: var(--red-dark); background: #eef4fb; border-radius: 4px; list-style: none; }
+  details.deep summary::before { content: '▸ '; }
+  details.deep[open] summary::before { content: '▾ '; }
+  details.deep .deep-body { padding: 6px 16px 10px 16px; }
+  .toc { background: #f3f8fd; border: 1px solid #d8e4f2; border-radius: 6px; padding: 14px 20px; margin: 16px 0 24px 0; }
+  .toc ol { padding-left: 18px; }
+  .small { font-size: 12px; color: #777; }
+  .fnref { color: var(--red); font-weight: bold; font-size: 0.75em; }
+  .glossary-item { margin: 0 0 10px 0; padding-left: 24px; text-indent: -24px; }
+  .glossary-item b { color: var(--red-dark); }
+  .step { margin: 22px 0 10px 0; }
+  .step-head { display: block; background: var(--red-dark); color: #fff; padding: 6px 12px; border-radius: 4px 4px 0 0; font-weight: bold; font-size: 14px; }
+  .step-head .num { display: inline-block; background: #fff; color: var(--red-dark); padding: 0 8px; border-radius: 3px; margin-right: 8px; font-size: 12.5px; }
+  .step-body { border: 1px solid var(--red-mid); border-top: none; border-radius: 0 0 4px 4px; padding: 10px 14px; }
+  .step-body pre { margin: 8px 0; }
+  .why { background: #fff8e6; border-left: 4px solid #e0a800; padding: 6px 12px; margin: 10px 0 4px 0; font-size: 13px; }
+  .why b { color: #8a6500; }
+  .file { font-family: 'DejaVu Sans Mono', Menlo, monospace; font-size: 12px; color: var(--red-dark); background: #e8f1fb; padding: 1px 6px; border-radius: 3px; }
+  .session-banner { background: linear-gradient(90deg, var(--red-dark), var(--red)); color: #fff; padding: 10px 16px; border-radius: 6px; margin: 28px 0 12px 0; font-size: 17px; font-weight: bold; }
+  .session-banner span { font-weight: normal; font-size: 12px; opacity: 0.9; margin-left: 10px; }
+  .page-break { display: none; }
+
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #fff; }
+  .layout { display: flex; align-items: flex-start; }
+  .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; width: 300px; flex: 0 0 300px; background: var(--red-dark); color: #fff; padding: 52px 12px 16px 12px; box-sizing: border-box; font-size: 12.5px; transition: margin-left .2s; }
+  body.nav-collapsed .sidebar { margin-left: -300px; }
+  .sidebar .nav-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 8px; }
+  .sidebar ul { list-style: none; padding-left: 0; margin: 0; }
+  .sidebar li { margin: 1px 0; }
+  .sidebar a { color: #fff; text-decoration: none; display: block; padding: 4px 8px; border-radius: 4px; }
+  .sidebar a:hover { background: #fff; color: var(--red-dark); }
+  .sidebar .nav-steps { padding-left: 8px; border-left: 2px solid rgba(255,255,255,.4); margin: 4px 0 6px 8px; }
+  .sidebar .nav-steps a { font-size: 11.5px; color: #dcebfa; }
+  .sidebar .nav-steps a:hover { color: var(--red-dark); }
+  .sidebar .nav-session a { color: #fff; font-weight: bold; margin-top: 6px; background: rgba(255,255,255,.12); }
+  .sidebar a .mark { display: inline-block; width: 14px; color: #fff; font-weight: bold; }
+  .sidebar a.done { opacity: .75; }
+  .sidebar a.done .mark::before { content: '✓'; }
+  .sidebar .progress { margin: 6px 0 12px 0; }
+  .sidebar .bar { height: 8px; background: rgba(255,255,255,.25); border-radius: 4px; overflow: hidden; }
+  .sidebar .fill { height: 100%; width: 0; background: #fff; transition: width .3s; }
+  .sidebar .ptext { font-size: 11px; margin-top: 4px; color: #dcebfa; }
+  .sidebar .reset { margin-top: 16px; background: transparent; border: 1px solid rgba(255,255,255,.5); color: #fff; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+  .sidebar .reset:hover { background: #fff; color: var(--red-dark); }
+  #nav-toggle { position: fixed; top: 10px; left: 10px; z-index: 20; background: var(--red); color: #fff; border: none; border-radius: 6px; width: 38px; height: 34px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  #nav-toggle:hover { background: var(--red-dark); }
+  main { flex: 1; max-width: 960px; padding: 24px 44px 90px 44px; box-sizing: border-box; min-width: 0; }
+  body.nav-collapsed main { padding-left: 64px; }
+  h2, .step, .glossary-item, .session-banner { scroll-margin-top: 16px; }
+  a { color: var(--red); }
+  a.anchor { color: #90b8e0; text-decoration: none; margin-left: 6px; font-weight: normal; font-size: 0.8em; opacity: 0; }
+  h2:hover a.anchor, .step-head:hover a.anchor { opacity: 1; }
+  .step-head a.anchor { color: #fff; float: right; }
+  a.fnref { text-decoration: none; vertical-align: super; padding: 0 2px; }
+  a.fnref:hover { background: var(--red-light); border-radius: 3px; }
+  a.back { text-decoration: none; font-size: 0.9em; color: #6ea3d6; margin-left: 4px; }
+  .glossary-item:target, .step:target { outline: 2px solid var(--red); outline-offset: 4px; border-radius: 4px; }
+  h2:target { background: var(--red-light); }
+  .done-label { display: inline-block; margin-right: 8px; vertical-align: middle; }
+  .done-label input { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; vertical-align: middle; }
+  .step-head .done-label input { accent-color: #fff; }
+  h2.is-done { color: #999; border-bottom-color: #ddd; }
+  .step.is-done .step-head { background: #9e9e9e; }
+  .step.is-done .step-body { border-color: #ddd; }
+  .totop { position: fixed; right: 24px; bottom: 24px; background: var(--red); color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+  @media (max-width: 900px) { .sidebar { position: fixed; z-index: 10; } main { padding: 56px 16px 60px 16px; } body.nav-collapsed main { padding-left: 16px; } }
+  @media print { .sidebar, .totop, #nav-toggle, a.anchor, a.back, .done-label { display: none; } .layout { display: block; } main { max-width: none; padding: 0; } a { color: inherit; text-decoration: none; } details.deep { border: none; } details.deep summary { display: none; } details.deep .deep-body { display: block; } }
+</style>
+</head>
+<body id="top">
+<button id="nav-toggle">✕</button>
+<div class="layout">
+<nav class="sidebar" id="sidebar">
+<div class="nav-title">🚦 Traefik Lab</div>
+<div class="progress"><div class="bar"><div class="fill" id="progress-fill"></div></div><div class="ptext" id="progress-text">0 / 0</div></div>
+<ul>
+<li><a href="#sec-0" data-key="sec-0"><span class="mark"></span>0. Введение в Docker: с нуля</a></li>
+<li><a href="#sec-1" data-key="sec-1"><span class="mark"></span>1. Разбор задачи и зачем именно Traefik</a></li>
+<li><a href="#sec-2" data-key="sec-2"><span class="mark"></span>2. Как Traefik устроен внутри</a></li>
+<li><a href="#sec-3" data-key="sec-3"><span class="mark"></span>3. Итоговая архитектура</a></li>
+<li><a href="#sec-4" data-key="sec-4"><span class="mark"></span>4. Стек и структура проекта</a></li>
+<li><a href="#sec-5" data-key="sec-5"><span class="mark"></span>5. Service Discovery через labels</a></li>
+<li><a href="#sec-6" data-key="sec-6"><span class="mark"></span>6. Сценарий: путь запроса</a></li>
+<li><a href="#sec-7" data-key="sec-7"><span class="mark"></span>7. Middlewares и Load Balancing</a></li>
+<li><a href="#sec-8" data-key="sec-8"><span class="mark"></span>8. TLS: mkcert vs Let's Encrypt</a></li>
+<li><a href="#sec-9" data-key="sec-9"><span class="mark"></span>9. Пошаговая сборка (3 сессии)</a>
+<ul class="nav-steps">
+<li class="nav-session"><a href="#session-1">Сессия 1</a></li>
+<li><a href="#step-1-1" data-key="step-1-1"><span class="mark"></span>1.1 Создаём каталоги</a></li>
+<li><a href="#step-1-2" data-key="step-1-2"><span class="mark"></span>1.2 traefik/traefik.yml</a></li>
+<li><a href="#step-1-3" data-key="step-1-3"><span class="mark"></span>1.3 docker-compose.yml (база)</a></li>
+<li><a href="#step-1-4" data-key="step-1-4"><span class="mark"></span>1.4 Первый роутер — labels на whoami</a></li>
+<li><a href="#step-1-5" data-key="step-1-5"><span class="mark"></span>1.5 Dashboard и его защита</a></li>
+<li><a href="#step-1-6" data-key="step-1-6"><span class="mark"></span>1.6 Podman: rootless и сокет</a></li>
+<li class="nav-session"><a href="#session-2">Сессия 2</a></li>
+<li><a href="#step-2-1" data-key="step-2-1"><span class="mark"></span>2.1 Backend API — api/Dockerfile</a></li>
+<li><a href="#step-2-2" data-key="step-2-2"><span class="mark"></span>2.2 Frontend — path routing + StripPrefix</a></li>
+<li><a href="#step-2-3" data-key="step-2-3"><span class="mark"></span>2.3 PostgreSQL + Adminer</a></li>
+<li><a href="#step-2-4" data-key="step-2-4"><span class="mark"></span>2.4 Масштабирование API + healthcheck</a></li>
+<li><a href="#step-2-5" data-key="step-2-5"><span class="mark"></span>2.5 Цепочка middlewares</a></li>
+<li class="nav-session"><a href="#session-3">Сессия 3</a></li>
+<li><a href="#step-3-1" data-key="step-3-1"><span class="mark"></span>3.1 mkcert для локального TLS</a></li>
+<li><a href="#step-3-2" data-key="step-3-2"><span class="mark"></span>3.2 Let's Encrypt (staging)</a></li>
+<li><a href="#step-3-3" data-key="step-3-3"><span class="mark"></span>3.3 Canary — weighted round robin</a></li>
+<li><a href="#step-3-4" data-key="step-3-4"><span class="mark"></span>3.4 Production Hell — без подсказок</a></li>
+</ul>
+</li>
+<li><a href="#sec-10" data-key="sec-10"><span class="mark"></span>10. Чек-лист концепций</a></li>
+<li><a href="#sec-11" data-key="sec-11"><span class="mark"></span>11. Глоссарий терминов</a></li>
+<li><a href="#sec-12" data-key="sec-12"><span class="mark"></span>12. Вопросы для самопроверки</a></li>
+<li><a href="#sec-13" data-key="sec-13"><span class="mark"></span>13. Что дальше</a></li>
+<li><a href="#sec-14" data-key="sec-14"><span class="mark"></span>14. Ваш сервер: meeymirita.ru</a></li>
+</ul><button class="reset" id="reset-progress" title="Сбросить все галочки">Сбросить прогресс</button></nav>
+<main>
+
+<h1>🚦 Traefik Lab — Reverse Proxy для мульти-сервисного стека</h1>
+<p class="subtitle">Подробное руководство: от модели EntryPoint → Router → Middleware → Service до TLS и canary-деплоя.
+Стек: Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API + статический frontend + PostgreSQL + Adminer.
+Каждая тема — с блоком «Под капотом». Отмечайте пройденное галочками — прогресс сохраняется в браузере.</p>
+
+<div class="note-box">
+<span class="tag">КАК ПОЛЬЗОВАТЬСЯ</span>
+<ul>
+<li><b>Раздел <a href="#sec-0">0</a></b> — если раньше не работали с Docker вообще, начните строго с него: без этого разделы 1–9 будут набором незнакомых слов.</li>
+<li><b>Разделы <a href="#sec-1">1</a>–8</b> — теория и архитектура: прочитать один раз до сборки, потом возвращаться по ссылкам.</li>
+<li><b>Раздел <a href="#sec-9">9</a></b> — сборка по шагам. У каждого шага: код → «Зачем» → «🔬 Под капотом» (раскрывается) → «Перед следующим шагом».</li>
+<li>Циферки у терминов ведут в глоссарий (раздел <a href="#sec-11">11</a>). Сайдбар слева сворачивается кнопкой ☰.</li>
+<li>Ссылки «посмотреть» ведут на поиск YouTube по точному запросу — вы получите свежие видео, а не устаревшую ссылку.</li>
+<li>Все команды даны для <code>docker compose</code>; там, где Podman ведёт себя иначе — отдельная заметка (шаг <a href="#step-1-6">1.6</a>).</li>
+</ul>
+</div>
+
+<div class="toc">
+<b>Содержание</b>
+<ol><li><a href="#sec-0">Введение в Docker: с нуля (если раньше не работали с контейнерами — начните отсюда)</a></li><li><a href="#sec-1">Разбор задачи: зачем именно Traefik</a></li><li><a href="#sec-2">Как Traefik устроен внутри</a></li><li><a href="#sec-3">Итоговая архитектура</a></li><li><a href="#sec-4">Технологический стек и структура проекта</a></li><li><a href="#sec-5">Service Discovery через labels</a></li><li><a href="#sec-6">Сценарий: путь запроса от браузера до контейнера</a></li><li><a href="#sec-7">Middlewares и Load Balancing</a></li><li><a href="#sec-8">TLS: mkcert vs Let's Encrypt</a></li><li><a href="#sec-9">Пошаговая сборка проекта (3 сессии)</a></li><li><a href="#sec-10">Полный чек-лист концепций</a></li><li><a href="#sec-11">Глоссарий терминов</a></li><li><a href="#sec-12">Вопросы для самопроверки / собеседования</a></li><li><a href="#sec-13">Что дальше: дорожная карта после лабы</a></li><li><a href="#sec-14">Ваш сервер: адаптация под meeymirita.ru / 45.10.166.23</a></li></ol>
+</div>
+
+<h2 id="sec-0"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-0"></label>0. Введение в Docker: с нуля <a class="anchor" href="#sec-0">#</a></h2>
+<p>Если вы никогда раньше не запускали <code>docker run</code> — начните здесь. Дальше в лабе постоянно встречаются
+слова «контейнер», «образ», «сеть», «volume» так, будто вы уже с ними знакомы. Это нормально: без этого раздела
+разделы 1–9 действительно читаются как набор незнакомых терминов. После этого раздела вернитесь к разделу 1 —
+он станет понятнее.</p>
+
+<h3>0.1 Проблема, которую решает Docker</h3>
+<p>Классическая боль: «у меня на компьютере работает, а на сервере — нет». Причина обычно в окружении: другая версия
+PHP/Node/Python, не та версия библиотеки, забытая переменная окружения. Docker решает это так: вместо того чтобы
+устанавливать приложение прямо на компьютер (и зависеть от того, что на нём уже стоит), приложение упаковывается
+вместе <b>со всем, что ему нужно для работы</b> — конкретной версией языка, библиотеками, настройками — в один
+переносимый пакет. Этот пакет одинаково запускается и у вас на ноутбуке, и на сервере, и у коллеги.</p>
+
+<div class="insight-box">
+<span class="tag">💡 Контейнер — это не виртуальная машина</span>
+<p>Виртуальная машина (VM) эмулирует целый компьютер: у неё своё ядро операционной системы, она «весит» гигабайты
+и стартует минуту. Контейнер — это изолированный процесс, который использует ядро операционной системы <i>хоста</i>
+(вашего компьютера), но видит только свою файловую систему и свою сеть — как будто он один в отдельной коробке.
+Из-за этого контейнер весит мегабайты, а не гигабайты, и стартует за секунды, а не за минуту. Изоляция чуть слабее,
+чем у полноценной VM, но для 95% задач разработки и деплоя этого более чем достаточно.</p>
+</div>
+
+<h3>0.2 Образ (image) и контейнер (container) — в чём разница</h3>
+<p>Это самая частая путаница у новичков, поэтому разберём отдельно.</p>
+<table>
+<tr><th>Термин</th><th>Что это</th><th>Аналогия</th></tr>
+<tr><td><b>Образ (image)</b></td><td>неизменяемый «слепок»: файловая система + что запускать при старте. Хранится на диске или в реестре (Docker Hub)</td><td>класс в программировании / установочный ISO-диск</td></tr>
+<tr><td><b>Контейнер (container)</b></td><td>запущенный (или остановленный) экземпляр образа — реальный процесс с своим ID</td><td>объект, созданный из класса / установленная и включённая система</td></tr>
+<tr><td><b>Dockerfile</b></td><td>текстовый рецепт: как собрать образ шаг за шагом</td><td>инструкция сборки</td></tr>
+<tr><td><b>Docker Hub</b></td><td>публичный реестр готовых образов (postgres, nginx, node и т.д.)</td><td>магазин приложений</td></tr>
+</table>
+<p>Из одного образа можно запустить сколько угодно контейнеров одновременно — точно так же, как из одного класса
+можно создать много объектов. Именно так работает масштабирование в шаге <a href="#step-2-4">2.4</a>: три контейнера
+API — это три независимых процесса из одного и того же образа.</p>
+
+<h3>0.3 Основные команды — шпаргалка</h3>
+<pre><code># посмотреть образ и скачать/собрать его
+docker pull nginx                    # скачать готовый образ с Docker Hub
+docker build -t myapp .              # собрать свой образ из Dockerfile в текущей папке
+
+# запустить контейнер
+docker run -d --name web -p 8080:80 nginx
+#            │        │      │
+#            │        │      └─ проброс порта: локальный:контейнерный
+#            │        └─ имя контейнера, чтобы не запоминать ID
+#            └─ detached: в фоне, не занимая терминал
+
+# посмотреть, что вообще происходит
+docker ps                            # список запущенных контейнеров
+docker ps -a                         # + остановленные
+docker logs -f web                   # логи контейнера в реальном времени
+docker exec -it web sh               # зайти "внутрь" контейнера терминалом
+
+# остановить и убрать
+docker stop web && docker rm web</code></pre>
+<div class="why"><b>Зачем это знать до Traefik:</b> когда в разделе <a href="#sec-9">9</a> что-то не заработает,
+первое, что вы будете делать — <code>docker compose logs -f traefik</code> и <code>docker ps</code>, чтобы увидеть,
+что контейнер вообще запустился и не падает в перезапуск.</div>
+
+<h3>0.4 Docker Compose — зачем он, если уже есть docker run</h3>
+<p>В этой лабе не один контейнер, а несколько: Traefik, API, frontend, база данных, Adminer — и все они должны
+видеть друг друга и знать, кто где. Запускать каждый отдельной длинной командой <code>docker run</code> с десятком
+флагов — неудобно и легко ошибиться. <b>Docker Compose</b> — это способ описать все контейнеры, их сети и тома
+<i>одним файлом</i> <span class="file">docker-compose.yml</span>, а затем поднять всё разом одной командой.</p>
+<pre><code>docker compose up -d       # поднять всё, что описано в docker-compose.yml, в фоне
+docker compose ps          # какие сервисы подняты
+docker compose logs -f     # логи всех сервисов сразу
+docker compose down        # остановить и удалить все контейнеры проекта</code></pre>
+<p>В файле каждый контейнер называется не «контейнером», а <b>сервисом (service)</b> — потому что Compose может
+поднять несколько одинаковых контейнеров под одним сервисом (это и есть масштабирование из шага
+<a href="#step-2-4">2.4</a>).</p>
+
+<h3>0.5 Сеть (network) — как контейнеры находят друг друга</h3>
+<p>По умолчанию контейнеры изолированы друг от друга. Docker Compose создаёт для проекта общую сеть, и все
+сервисы, подключённые к ней, могут обращаться друг к другу <b>по имени сервиса</b>, как по доменному имени —
+Docker сам поднимает внутренний DNS. Если в <span class="file">docker-compose.yml</span> есть сервис
+<code>db</code>, то из сервиса <code>api</code> к нему можно обратиться просто как <code>db:5432</code>, без
+всякого IP-адреса — Docker сам его подставит.</p>
+<div class="note-box"><span class="tag">ЭТО КЛЮЧЕВАЯ ИДЕЯ ДЛЯ ВСЕЙ ЛАБЫ</span>
+<p>Traefik работает ровно так же: когда в разделе <a href="#sec-5">5</a> вы увидите
+<code>traefik.http.services.api.loadbalancer.server.port=3000</code> — это именно порт <i>внутри</i> сети Docker,
+куда Traefik стучится по внутреннему имени сервиса <code>api</code>, а не порт, открытый наружу на вашем
+компьютере. Наружу в итоге открыт только сам Traefik (порты 80/443), а всё остальное общается друг с другом
+только внутри этой внутренней сети — снаружи эти адреса вообще не видны.</p></div>
+
+<h3>0.6 Volume — почему данные не пропадают при перезапуске контейнера</h3>
+<p>Контейнер по умолчанию «одноразовый»: если его удалить и создать заново из того же образа, всё, что было
+записано внутри (например, данные в базе), пропадёт. <b>Volume</b> — это папка, которая живёт <i>вне</i>
+контейнера, на хосте, и «подключается» внутрь него. Контейнер можно пересоздавать сколько угодно раз — volume
+и данные в нём останутся. В этой лабе volume используется для PostgreSQL (шаг <a href="#step-2-3">2.3</a>), чтобы
+заказы и таблицы не терялись при каждом <code>docker compose down</code>.</p>
+
+<h3>0.7 Порты: проброс наружу vs общение внутри сети</h3>
+<p>Флаг <code>-p 8080:80</code> (или в compose — <code>ports: ["8080:80"]</code>) означает «сделать порт 80 внутри
+контейнера доступным снаружи как порт 8080 на моей машине». Это единственный способ достучаться до контейнера
+<i>извне</i> Docker-сети — с вашего браузера. В этой лабе такой проброс есть только у одного контейнера — Traefik
+(порты 80 и 443, шаг <a href="#step-1-3">1.3</a>). Все остальные сервисы (API, frontend, БД) портов наружу не
+пробрасывают вообще — до них можно достучаться только через внутреннюю сеть, то есть только через Traefik. Это и
+есть смысл reverse proxy: один открытый вход вместо десятка.</p>
+
+<h3>0.8 Podman — то же самое, но без постоянного демона</h3>
+<p>Podman — альтернатива Docker с почти идентичными командами (<code>podman run</code>, <code>podman ps</code>,
+<code>podman compose</code>). Главное отличие: Docker всегда держит в фоне единый демон-процесс с правами root,
+который управляет всеми контейнерами, а Podman запускает каждый контейнер как обычный процесс без постоянного
+демона и умеет работать полностью без root (rootless) — это чуть безопаснее. Для наших целей разница станет
+заметна только в одном месте — сокете для Traefik (шаг <a href="#step-1-6">1.6</a>), всё остальное в лабе работает
+одинаково что на Docker, что на Podman.</p>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-1">1</a></span>
+<ul>
+<li>📖 Почитать: <a href="https://docs.docker.com/get-started/docker-overview/" target="_blank">Docker docs: Overview — что такое Docker</a> — официальное введение с картинками, 10 минут чтения.</li>
+<li>📖 Почитать: <a href="https://docs.docker.com/compose/intro/compose-application-model/" target="_blank">Docker docs: Compose application model</a> — как файл превращается в сервисы, сети и тома.</li>
+<li>▶ Посмотреть: <a href="https://www.youtube.com/results?search_query=Docker+for+beginners+containers+vs+virtual+machines" target="_blank">«Docker for beginners: containers vs virtual machines»</a>.</li>
+</ul></div>
+
+<h2 id="sec-1"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-1"></label>1. Разбор задачи: зачем именно Traefik <a class="anchor" href="#sec-1">#</a></h2>
+<div class="note-box"><span class="tag">СОВСЕМ ПРОСТЫМИ СЛОВАМИ</span>
+<p><b>Reverse proxy</b> — это «секретарь на входе»: клиент стучится не напрямую к нужному сервису, а к секретарю
+(Traefik), и секретарь по адресу запроса (какой домен, какой путь) решает, к какому именно сервису его провести.
+Сервисы при этом вообще не видны снаружи напрямую — только через этого секретаря. Именно поэтому в разделе
+<a href="#sec-0">0.7</a> наружу открыт только порт самого Traefik, а не портов API/frontend/БД.</p></div>
+<p>Задача — поднять несколько сервисов (API, frontend, админку БД) за одним входом на 80/443 порту, без ручного
+прописывания <code>nginx.conf</code> под каждый новый контейнер. Классический nginx как reverse proxy тоже умеет
+маршрутизацию, но конфиг нужно писать руками и перезагружать вручную. Traefik<a class="fnref" href="#term-1" id="ref-1" title="к глоссарию">1</a>
+читает конфигурацию маршрутов прямо из label'ов контейнеров и обновляет её на лету — контейнер запустился → правило появилось,
+контейнер остановился → правило исчезло.</p>
+
+<div class="insight-box">
+<span class="tag">💡 Почему не просто «пробросить порты наружу»</span>
+<p>Наивный вариант — каждому сервису свой порт: API на :3000, frontend на :8080, Adminer на :8081. Работает,
+но: (1) в проде вы не можете открыть десяток портов клиенту — только 80/443; (2) TLS<a class="fnref" href="#term-2" id="ref-2" title="к глоссарию">2</a>
+пришлось бы настраивать в каждом сервисе отдельно; (3) добавление второй реплики API ломает схему «порт = сервис».
+Traefik решает всё это одним слоем: один вход, маршрутизация по домену/пути, TLS и балансировка централизованно.</p>
+</div>
+
+<h3>Что доработано по сравнению с «просто docker-compose + traefik labels»</h3>
+<table>
+<tr><th>Нюанс</th><th>Что происходит без доработки</th><th>Как сделано в лабе</th></tr>
+<tr><td>Дашборд без пароля</td><td>любой в локальной сети открывает <code>/dashboard</code> и видит всю топологию</td><td>middleware <code>basicauth</code> на роутере дашборда (шаг <a href="#step-1-5">1.5</a>)</td></tr>
+<tr><td>TLS сразу через Let's Encrypt</td><td>rate-limit продакшен-CA при каждом рестарте контейнера во время обучения</td><td>сначала mkcert локально (шаг <a href="#step-3-1">3.1</a>), потом staging-резолвер (шаг <a href="#step-3-2">3.2</a>)</td></tr>
+<tr><td>Один Docker provider на всё</td><td>неочевидно, что делать с сервисами без Docker (внешняя БД, legacy-хост)</td><td>раздел <a href="#sec-5">5</a> объясняет providers и когда нужен file provider вместо labels</td></tr>
+<tr><td>Масштабирование без healthcheck</td><td>Traefik будет слать трафик и на ещё не готовую, и на упавшую реплику</td><td>шаг <a href="#step-2-4">2.4</a>: <code>healthcheck</code> label + graceful старт</td></tr>
+</table>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-2">2</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/getting-started/concepts/" target="_blank">Traefik docs: Concepts</a> — официальное введение в EntryPoints/Routers/Middlewares/Services.</li></ul></div>
+
+<h2 id="sec-2"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-2"></label>2. Как Traefik устроен внутри <a class="anchor" href="#sec-2">#</a></h2>
+<p>Traefik строит конфигурацию из двух слоёв: <b>статическая конфигурация</b><a class="fnref" href="#term-3" id="ref-3" title="к глоссарию">3</a>
+(что нельзя менять без рестарта: какие порты слушать, какие providers включены) и <b>динамическая конфигурация</b><a class="fnref" href="#term-4" id="ref-4" title="к глоссарию">4</a>
+(роутеры, middlewares, TLS-настройки — обновляется на лету).</p>
+<div class="note-box"><span class="tag">ПРОСТЫМИ СЛОВАМИ ПРО ТАБЛИЦУ НИЖЕ</span>
+<p>Если коротко: запрос сначала попадает в «дверь» (EntryPoint), Traefik узнаёт, какие вообще есть правила
+(Provider), сверяет запрос с правилами (Router), пропускает через охрану/фильтры (Middleware) и в конце
+отправляет в нужный контейнер (Service). Все пять терминов ниже — это буквально пять слов, в которых чаще всего
+путаются на старте; возвращайтесь к этой таблице каждый раз, когда встретите незнакомое слово из этого списка.</p></div>
+<table>
+<tr><th>Сущность</th><th>Что делает</th><th>Аналогия</th></tr>
+<tr><td>EntryPoint<a class="fnref" href="#term-5" id="ref-5" title="к глоссарию">5</a></td><td>слушающий порт (web=80, websecure=443)</td><td>«входная дверь»</td></tr>
+<tr><td>Provider<a class="fnref" href="#term-6" id="ref-6" title="к глоссарию">6</a></td><td>источник конфигурации: Docker labels, файл, Consul, Kubernetes CRD</td><td>«откуда брать правила»</td></tr>
+<tr><td>Router<a class="fnref" href="#term-7" id="ref-7" title="к глоссарию">7</a></td><td>правило «если Host/Path такой — веди сюда»</td><td>маршрут в роутере Wi-Fi</td></tr>
+<tr><td>Middleware<a class="fnref" href="#term-8" id="ref-8" title="к глоссарию">8</a></td><td>обработка запроса до сервиса: auth, rate-limit, headers, StripPrefix</td><td>охрана на входе</td></tr>
+<tr><td>Service<a class="fnref" href="#term-9" id="ref-9" title="к глоссарию">9</a></td><td>куда реально отправить запрос: один или несколько backend'ов + алгоритм балансировки</td><td>сам ресторан за дверью</td></tr>
+</table>
+<pre>
+Клиент → EntryPoint (:80/:443) → Router (matches Host/Path) → [Middleware chain] → Service → контейнер(ы)
+</pre>
+<details class="deep"><summary>🔬 Под капотом: почему providers два вида, и что если их несколько сразу</summary><div class="deep-body">
+<p>Docker provider — самый удобный для compose-стека: правила лежат прямо в <code>labels:</code> нужного сервиса,
+рядом с его описанием. Но у него нет доступа к тому, что не запущено в Docker/Podman — например, к внешнему
+legacy-серверу на другой машине. Для этого есть file provider: статический (или динамически перечитываемый) YAML/TOML
+файл, куда роутер и service прописываются руками с конкретным IP:порт вместо label'а.</p>
+<p>Traefik умеет объединять несколько providers одновременно — их конфигурации мержатся. На практике это значит,
+что часть маршрутов может жить в labels, а часть (например, глобальные middlewares вроде <code>secure-headers</code>)
+— в общем файле <code>dynamic/middlewares.yml</code>, чтобы не копировать один и тот же блок в каждый сервис.</p>
+</div></details>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-3">3</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/providers/docker/" target="_blank">Traefik docs: Docker provider</a>.</li>
+<li>▶ Посмотреть: <a href="https://www.youtube.com/results?search_query=Traefik+v3+EntryPoints+Routers+Middlewares+explained" target="_blank">«Traefik EntryPoints Routers Middlewares explained»</a>.</li></ul></div>
+
+<h2 id="sec-3"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-3"></label>3. Итоговая архитектура <a class="anchor" href="#sec-3">#</a></h2>
+<pre>
+                         Интернет / браузер
+                                │
+                        :80 → :443 (redirect)
+                                ▼
+                   ┌─────────────────────────┐
+                   │        Traefik           │  ← дашборд: dashboard.localhost (basicauth)
+                   │  EntryPoints: web, websecure │
+                   └────────────┬─────────────┘
+        Host: app.localhost     │       Host: api.localhost   Host: db.localhost
+                ▼                        ▼                          ▼
+        ┌───────────────┐        ┌──────────────┐          ┌───────────────┐
+        │ frontend (nginx)│      │  api (Node)  │          │   Adminer     │
+        │  static SPA     │      │  x3 реплики  │          │               │
+        └───────────────┘        │ round-robin  │          └───────┬───────┘
+                                  │ + healthcheck │                  │
+                                  └───────┬───────┘                  │
+                                          ▼                          ▼
+                                   ┌─────────────┐           (тот же контейнер)
+                                   │ PostgreSQL  │◄──────────────────┘
+                                   └─────────────┘
+</pre>
+<p>Все сервисы сидят в одной Docker-сети <code>traefik-public</code> (шаг <a href="#step-1-3">1.3</a>); наружу открыт только
+сам Traefik. PostgreSQL и API дополнительно используют внутреннюю сеть <code>backend</code>, недоступную из <code>traefik-public</code> —
+Traefik физически не может замаршрутизировать трафик напрямую в БД, только через API или Adminer.</p>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-4">4</a></span>
+<ul><li>📖 Почитать: <a href="https://docs.docker.com/compose/networking/" target="_blank">Docker Compose: Networking</a> — как имена сервисов становятся DNS-именами внутри сети.</li></ul></div>
+
+<h2 id="sec-4"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-4"></label>4. Технологический стек и структура проекта <a class="anchor" href="#sec-4">#</a></h2>
+<table>
+<tr><th>Компонент</th><th>Выбор</th><th>Зачем</th></tr>
+<tr><td>Reverse proxy</td><td>traefik:v3.1</td><td>динамическая маршрутизация, встроенный ACME-клиент</td></tr>
+<tr><td>Контейнеризация</td><td>Docker Compose (совместимо с Podman + podman-compose)</td><td>единый манифест для всех сервисов</td></tr>
+<tr><td>Backend API</td><td>Node.js 20 + Express</td><td>лёгкий, быстрый health-эндпоинт, удобно масштабировать</td></tr>
+<tr><td>Frontend</td><td>статический билд + nginx:alpine</td><td>показать path-based routing отдельно от host-based</td></tr>
+<tr><td>БД</td><td>PostgreSQL 16</td><td>реальный сервис за приватной сетью</td></tr>
+<tr><td>Админка БД</td><td>adminer</td><td>второй Host-роутер для отработки нескольких доменов</td></tr>
+<tr><td>Локальный TLS</td><td>mkcert</td><td>доверенный сертификат в браузере без предупреждений</td></tr>
+</table>
+<pre>
+traefik-lab/
+├── docker-compose.yml
+├── .env
+├── traefik/
+│   ├── traefik.yml                (статическая конфигурация)
+│   ├── acme/acme.json              (хранилище сертификатов Let's Encrypt, chmod 600)
+│   └── dynamic/
+│       ├── middlewares.yml         (общие middlewares: headers, ratelimit)
+│       └── tls.yml                 (mkcert-сертификаты для локали)
+├── api/
+│   ├── Dockerfile
+│   ├── package.json
+│   └── server.js
+├── frontend/
+│   ├── Dockerfile
+│   └── dist/index.html
+└── db/
+    └── init.sql
+</pre>
+<div class="note-box"><span class="tag">DOCKER vs PODMAN</span>
+<p>Все шаги ниже написаны под <code>docker compose</code>. Если у вас Podman: команды 1-в-1 совпадают через
+<code>podman compose</code> (или отдельно установленный <code>podman-compose</code>), кроме сокета Docker provider —
+подробности в шаге <a href="#step-1-6">1.6</a>.</p></div>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-5">5</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/reference/install-configuration/providers/docker/" target="_blank">Traefik docs: Docker configuration reference</a>.</li></ul></div>
+
+<h2 id="sec-5"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-5"></label>5. Service Discovery через labels <a class="anchor" href="#sec-5">#</a></h2>
+<p>Traefik подключается к Docker-сокету (<code>/var/run/docker.sock</code>) в режиме только чтения и подписывается на
+события: контейнер запущен/остановлен/изменён. У каждого контейнера, который хочет получить маршрут, в <code>labels:</code>
+описывается мини-конфигурация роутера прямо в compose-файле.</p>
+<pre>
+services:
+  whoami:
+    image: traefik/whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"
+</pre>
+<div class="insight-box">
+<span class="tag">💡 exposedByDefault=false — обязательная настройка</span>
+<p>По умолчанию Traefik готов раздать маршрут <b>любому</b> контейнеру в сети, даже без единого label — просто по
+первому открытому порту. В проекте с десятком контейнеров это создаёт случайные, никем не запланированные роуты.
+Поэтому в статической конфигурации (шаг <a href="#step-1-2">1.2</a>) выставляется
+<code>providers.docker.exposedByDefault: false</code>, и каждый сервис явно включается через
+<code>traefik.enable=true</code>.</p>
+</div>
+<details class="deep"><summary>🔬 Под капотом: как имя роутера попадает в label, и что будет при коллизии</summary><div class="deep-body">
+<p>Формат label — <code>traefik.&lt;http|tcp&gt;.&lt;routers|services|middlewares&gt;.&lt;имя&gt;.&lt;свойство&gt;=значение</code>.
+Имя (<code>whoami</code> в примере) — произвольная строка, но должно быть уникальным во всей топологии: если два
+разных сервиса объявят роутер с одинаковым именем, Traefik подхватит один из них по правилам приоритета конфигурации
+провайдеров и залогирует конфликт — вы получите «работает, но не тот сервис», что отлаживать неприятно. Поэтому
+на практике имя роутера обычно = имя compose-сервиса.</p>
+<p><b>Что если контейнер слушает нестандартный порт.</b> <code>loadbalancer.server.port</code> — это порт <i>внутри</i>
+контейнера, а не то, что видно снаружи (порты наружу вообще не публикуются — весь трафик идёт через внутреннюю Docker-сеть).
+Забытый или неверный port — самая частая причина «502 Bad Gateway» у новичков.</p>
+</div></details>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-6">6</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/routers/" target="_blank">Traefik docs: Routers</a> — синтаксис правил <code>Host()</code>, <code>PathPrefix()</code>, <code>&&</code>, <code>||</code>.</li></ul></div>
+
+<h2 id="sec-6"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-6"></label>6. Сценарий: путь запроса от браузера до контейнера <a class="anchor" href="#sec-6">#</a></h2>
+<pre>
+GET https://api.localhost/users/42
+</pre>
+<ol>
+<li>Запрос приходит на EntryPoint <code>websecure</code> (:443). TLS terminates здесь — контейнер API про HTTPS не знает вообще.</li>
+<li>Traefik ищет среди всех роутеров тот, чей <code>rule</code> совпадает: <code>Host(\`api.localhost\`)</code>. Если совпало несколько правил — побеждает более специфичное (длиннее по правилу), либо явный <code>priority</code>.</li>
+<li>Запрос проходит цепочку middlewares роутера по порядку: например, <code>ratelimit → headers</code> (раздел <a href="#sec-7">7</a>).</li>
+<li>Router передаёт запрос в <code>service</code>: если реплик несколько — балансировщик (round robin по умолчанию) выбирает живую, здоровую реплику по последнему известному healthcheck.</li>
+<li>Ответ идёт обратно тем же путём; Traefik добавляет заголовки вроде <code>X-Forwarded-For</code>, чтобы API знал реальный IP клиента.</li>
+</ol>
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-7">7</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/overview/" target="_blank">Traefik docs: Middlewares overview</a>.</li></ul></div>
+
+<h2 id="sec-7"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-7"></label>7. Middlewares и Load Balancing <a class="anchor" href="#sec-7">#</a></h2>
+<table>
+<tr><th>Middleware</th><th>Что делает</th><th>Где используем в лабе</th></tr>
+<tr><td>basicAuth</td><td>простая HTTP-авторизация</td><td>защита дашборда (шаг <a href="#step-1-5">1.5</a>)</td></tr>
+<tr><td>stripPrefix</td><td>убирает часть пути перед отправкой в сервис</td><td>frontend по <code>PathPrefix(\`/app\`)</code> (шаг <a href="#step-2-2">2.2</a>)</td></tr>
+<tr><td>rateLimit</td><td>ограничивает запросы в секунду с IP/ключа</td><td>API (шаг <a href="#step-2-5">2.5</a>)</td></tr>
+<tr><td>headers</td><td>CORS, security-заголовки (HSTS, X-Frame-Options)</td><td>общий middleware в <span class="file">dynamic/middlewares.yml</span></td></tr>
+<tr><td>retry</td><td>повторяет запрос к другой реплике при обрыве соединения</td><td>опционально на API</td></tr>
+<tr><td>compress</td><td>gzip/br сжатие ответа</td><td>frontend</td></tr>
+</table>
+<div class="insight-box">
+<span class="tag">💡 Балансировка — это не только round robin</span>
+<p>По умолчанию Service с несколькими серверами использует round robin<a class="fnref" href="#term-10" id="ref-10" title="к глоссарию">10</a>.
+Для canary-деплоя (шаг <a href="#step-3-3">3.3</a>) вместо этого объявляют два отдельных <code>service</code> (v1 и v2) и
+оборачивают их в <code>weighted</code> service с процентным распределением трафика — например, 90% на стабильную версию,
+10% на новую. Health check<a class="fnref" href="#term-11" id="ref-11" title="к глоссарию">11</a> при этом работает независимо от алгоритма:
+нездоровая реплика просто исключается из ротации, какой бы алгоритм ни стоял.</p>
+</div>
+<details class="deep"><summary>🔬 Под капотом: почему порядок middlewares в цепочке важен</summary><div class="deep-body">
+<p>Middlewares выполняются строго в том порядке, в котором перечислены в <code>router.middlewares</code>. Если поставить
+<code>headers</code> (добавляет CORS) после <code>ratelimit</code> — заблокированный по лимиту запрос получит ответ 429
+<i>без</i> CORS-заголовков, и браузер покажет непонятную CORS-ошибку вместо настоящей причины (rate limit).
+Правило: middlewares, которые должны сработать на «отказных» ответах тоже — ставить первыми.</p>
+</div></details>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-8">8</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/services/#load-balancing" target="_blank">Traefik docs: Load balancing</a> и <a href="https://doc.traefik.io/traefik/routing/services/#health-check" target="_blank">Health check</a>.</li>
+<li>▶ Посмотреть: <a href="https://www.youtube.com/results?search_query=Traefik+weighted+round+robin+canary+deployment" target="_blank">«Traefik weighted round robin canary deployment»</a>.</li></ul></div>
+
+<h2 id="sec-8"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-8"></label>8. TLS: mkcert vs Let's Encrypt <a class="anchor" href="#sec-8">#</a></h2>
+<table>
+<tr><th></th><th>mkcert</th><th>Let's Encrypt (ACME)</th></tr>
+<tr><td>Для чего</td><td>локальная разработка (<code>*.localhost</code>)</td><td>реальный домен в интернете</td></tr>
+<tr><td>Доверие браузера</td><td>да — mkcert ставит свой CA в системное хранилище</td><td>да — публично доверенный CA</td></tr>
+<tr><td>Нужен ли реальный домен/интернет</td><td>нет</td><td>да — CA должен достучаться до вашего сервера (HTTP-01) или проверить DNS (DNS-01)</td></tr>
+<tr><td>Лимиты</td><td>нет</td><td>да — у продакшен-CA жёсткие rate limits, поэтому есть staging-окружение</td></tr>
+</table>
+<div class="fix-box"><span class="tag">✅ ПРАВИЛО ЛАБЫ</span>
+<p>Сначала всегда staging-резолвер Let's Encrypt (шаг <a href="#step-3-2">3.2</a>) — он выдаёт сертификаты, которым
+браузер <i>не</i> доверяет, зато не расходует лимит на 5 неудачных попыток в час на реальном CA. Переключение на
+продакшен — это буквально одна закомментированная строка <code>caServer</code>.</p></div>
+
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-9">9</a></span>
+<ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/https/acme/" target="_blank">Traefik docs: ACME / Let's Encrypt</a>.</li>
+<li>📖 Почитать: <a href="https://github.com/FiloSottile/mkcert#readme" target="_blank">README mkcert</a>.</li></ul></div>
+
+<h2 id="sec-9"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-9"></label>9. Пошаговая сборка проекта (3 сессии) <a class="anchor" href="#sec-9">#</a></h2>
+
+<div class="session-banner" id="session-1">Сессия 1 — базовая инфраструктура <span>Traefik + первый маршрут + защита дашборда</span></div>
+
+<div class="step" id="step-1-1"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-1"></label><span class="num">Шаг 1.1</span>Создаём каталоги<a class="anchor" href="#step-1-1">#</a></span><div class="step-body">
+<pre><code>mkdir -p traefik-lab/{traefik/dynamic,traefik/acme,api,frontend,db}
+cd traefik-lab
+touch traefik/acme/acme.json && chmod 600 traefik/acme/acme.json</code></pre>
+<div class="why"><b>Зачем:</b> <code>acme.json</code> должен существовать заранее и иметь права <code>600</code> — иначе
+ACME-клиент Traefik откажется его использовать (Let's Encrypt требует, чтобы файл с приватными ключами не был
+доступен на чтение другим пользователям).</div>
+</div></div>
+
+<div class="step" id="step-1-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-2"></label><span class="num">Шаг 1.2</span>traefik/traefik.yml — статическая конфигурация<a class="anchor" href="#step-1-2">#</a></span><div class="step-body">
+<pre><code># traefik/traefik.yml
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik-public
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO</code></pre>
+<div class="why"><b>Зачем:</b> <code>exposedByDefault: false</code> — см. раздел <a href="#sec-5">5</a>. Секция
+<code>file</code> подключает второй provider для общих middlewares и TLS, которые неудобно дублировать в labels.
+<code>watch: true</code> — Traefik перечитывает файлы динамической конфигурации при изменении, без рестарта.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 1.3</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/reference/install-configuration/api-dashboard/" target="_blank">Traefik docs: API & Dashboard</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-1-3"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-3"></label><span class="num">Шаг 1.3</span>docker-compose.yml — база<a class="anchor" href="#step-1-3">#</a></span><div class="step-body">
+<pre><code># docker-compose.yml
+networks:
+  traefik-public:
+    name: traefik-public
+  backend:
+    name: backend
+
+services:
+  traefik:
+    image: traefik:v3.1
+    command: []
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/acme:/etc/traefik/acme
+    networks:
+      - traefik-public
+
+  whoami:
+    image: traefik/whoami
+    networks:
+      - traefik-public
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"</code></pre>
+<pre><code>docker compose up -d
+curl -H "Host: whoami.localhost" http://localhost</code></pre>
+<div class="why"><b>Зачем:</b> <code>whoami</code> — эталонный тестовый образ Traefik-сообщества: возвращает свои же
+заголовки и hostname контейнера в теле ответа, удобно проверять балансировку (шаг <a href="#step-2-4">2.4</a>) — видно,
+какая именно реплика ответила.</div>
+<details class="deep"><summary>🔬 Под капотом: почему сокет монтируется read-only, и что это НЕ делает безопасным</summary><div class="deep-body">
+<p><code>:ro</code> запрещает Traefik <i>писать</i> в сокет напрямую средствами файловой системы, но сам Docker API,
+доступный через сокет, всё равно позволяет создавать/удалять контейнеры, читать секреты в переменных окружения
+других контейнеров и так далее — доступ к <code>docker.sock</code> фактически эквивалентен root на хосте. Флаг
+<code>:ro</code> — это гигиена, а не полноценная изоляция; для честной изоляции в проде используют
+<code>docker-socket-proxy</code> — прокси, которое отдаёт только тот минимум Docker API, что нужен Traefik
+(листинг контейнеров и событий), и ничего больше.</p>
+</div></details>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 1.4</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/routers/#rule" target="_blank">Traefik docs: Router rule syntax</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-1-4"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-4"></label><span class="num">Шаг 1.4</span>Первый роутер — labels на whoami<a class="anchor" href="#step-1-4">#</a></span><div class="step-body">
+<p>Шаг 1.3 уже дал вам рабочий Host-based роутер. Здесь — проверка, что вы понимаете, что произошло, плюс второй
+роутер с явным приоритетом.</p>
+<pre><code>    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+      - "traefik.http.routers.whoami.priority=1"
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"</code></pre>
+<div class="why"><b>Зачем:</b> явный <code>priority</code> нужен, когда два правила пересекаются — например,
+<code>Host(\`app.localhost\`)</code> и <code>Host(\`app.localhost\`) && PathPrefix(\`/api\`)</code>. Без явного
+приоритета Traefik сам вычисляет его по длине правила, но в сложных стеках это неочевидно, и лучше не полагаться на угадывание.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 1.5</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/basicauth/" target="_blank">Traefik docs: BasicAuth middleware</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-1-5"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-5"></label><span class="num">Шаг 1.5</span>Dashboard и его защита<a class="anchor" href="#step-1-5">#</a></span><div class="step-body">
+<pre><code>echo $(htpasswd -nb admin admin123) | sed -e 's/\$/\$\$/g'
+# admin:$$apr1$$xxxxxxxx$$yyyyyyyyyyyyyyyyyyyyyy</code></pre>
+<pre><code>  traefik:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`dashboard.localhost`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.middlewares=dash-auth"
+      - "traefik.http.middlewares.dash-auth.basicauth.users=admin:$$apr1$$xxxxxxxx$$yyyyyyyyyyyyyyyyyyyyyy"</code></pre>
+<div class="why"><b>Зачем:</b> <code>service=api@internal</code> — специальный встроенный сервис, который отдаёт
+сам дашборд; без него label <code>api.dashboard=true</code> из шага 1.2 включает API, но не создаёт к нему маршрут.
+Двойной <code>$$</code> — экранирование <code>$</code> для docker-compose, который иначе примет его за переменную окружения.</div>
+<details class="deep"><summary>🔬 Под капотом: почему basicauth, а не «просто не публиковать порт»</summary><div class="deep-body">
+<p>Дашборд и так не «публикуется» отдельным портом — он идёт через тот же EntryPoint <code>web</code>, что и
+остальные сервисы, просто по своему Host-правилу. Значит, любой, кто знает или подберёт домен
+<code>dashboard.localhost</code> (или обратится по IP с нужным заголовком Host), увидит полную карту вашей
+инфраструктуры: имена сервисов, внутренние адреса, версии образов — отличная разведка для атакующего.
+basicauth — минимальный барьер для лабы; в проде вместо него чаще ставят forwardAuth<a class="fnref" href="#term-12" id="ref-12" title="к глоссарию">12</a> к общему SSO.</p>
+</div></details>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 1.6</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/routers/#special-service" target="_blank">Traefik docs: internal service <code>api@internal</code></a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-1-6"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-6"></label><span class="num">Шаг 1.6</span>Podman: rootless и сокет<a class="anchor" href="#step-1-6">#</a></span><div class="step-body">
+<pre><code># включаем API-сокет Podman (rootless, для текущего пользователя)
+systemctl --user enable --now podman.socket
+echo $XDG_RUNTIME_DIR/podman/podman.sock   # обычно /run/user/1000/podman/podman.sock</code></pre>
+<pre><code>  traefik:
+    volumes:
+      - ${XDG_RUNTIME_DIR}/podman/podman.sock:/var/run/docker.sock:ro</code></pre>
+<div class="why"><b>Зачем:</b> Podman не запускает постоянный демон, как Docker, поэтому «сокета Docker» в системе
+просто нет, пока вы явно не включите <code>podman.socket</code>. После этого сокет говорит на Docker-совместимом
+API, и Traefik-у всё равно, что за движок его обслуживает — provider так и называется <code>docker</code>.</div>
+<div class="note-box"><span class="tag">СЕТЕВОЕ ИМЯ В LABEL</span>
+<p>В rootless Podman по умолчанию сети называются иначе, чем в Docker Compose v2. Если Traefik не видит контейнеры,
+первым делом проверьте: <code>podman network ls</code> и убедитесь, что значение <code>providers.docker.network</code>
+в <span class="file">traefik.yml</span> совпадает с реальным именем сети из <code>podman-compose</code>.</p></div>
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-9">2.1</a></span><ul><li>📖 Почитать: <a href="https://docs.podman.io/en/latest/markdown/podman-system-service.1.html" target="_blank">Podman docs: podman system service</a>.</li></ul></div>
+</div></div>
+
+<div class="session-banner" id="session-2">Сессия 2 — реальные сервисы <span>API + frontend + БД + балансировка</span></div>
+
+<div class="step" id="step-2-1"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-1"></label><span class="num">Шаг 2.1</span>Backend API — api/Dockerfile<a class="anchor" href="#step-2-1">#</a></span><div class="step-body">
+<pre><code>// api/server.js
+const express = require('express');
+const os = require('os');
+const app = express();
+app.get('/health', (_, res) =&gt; res.json({ status: 'ok' }));
+app.get('/users/:id', (req, res) =&gt;
+  res.json({ id: req.params.id, servedBy: os.hostname() }));
+app.listen(3000, () =&gt; console.log('api on :3000'));</code></pre>
+<pre><code># api/Dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package.json .
+RUN npm install
+COPY server.js .
+CMD ["node", "server.js"]</code></pre>
+<pre><code>  api:
+    build: ./api
+    networks: [traefik-public, backend]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"</code></pre>
+<div class="why"><b>Зачем:</b> <code>servedBy: os.hostname()</code> в ответе — тот же трюк, что и у whoami: видно,
+какая реплика обработала запрос, когда в шаге <a href="#step-2-4">2.4</a> реплик станет несколько.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.2</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/stripprefix/" target="_blank">Traefik docs: StripPrefix middleware</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-2-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-2"></label><span class="num">Шаг 2.2</span>Frontend — path routing + StripPrefix<a class="anchor" href="#step-2-2">#</a></span><div class="step-body">
+<pre><code>  frontend:
+    build: ./frontend
+    networks: [traefik-public]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.localhost`) && PathPrefix(`/app`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.middlewares=frontend-strip"
+      - "traefik.http.middlewares.frontend-strip.stripprefix.prefixes=/app"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"</code></pre>
+<div class="why"><b>Зачем:</b> nginx внутри контейнера ничего не знает про префикс <code>/app</code> — он отдаёт
+файлы из корня. <code>stripPrefix</code> убирает <code>/app</code> из пути <i>до</i> того, как запрос дойдёт до
+контейнера, поэтому запрос <code>app.localhost/app/index.html</code> внутри превращается в <code>/index.html</code>.</div>
+<details class="deep"><summary>🔬 Под капотом: почему без stripPrefix получите 404, а не редирект</summary><div class="deep-body">
+<p>PathPrefix — это только условие <i>совпадения</i> роутера, оно не переписывает сам запрос. Без явного
+stripPrefix Traefik передаст в nginx ровно тот же путь, что пришёл от клиента, включая <code>/app</code>. Внутри
+контейнера такого файла нет (там нет папки <code>/app</code> в document root), и nginx честно вернёт 404 — при
+этом снаружи будет казаться, что «Traefik не находит сервис», хотя проблема на уровне пути внутри контейнера, и
+Traefik здесь работает ровно как настроено.</p>
+</div></details>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.3</span><ul><li>📖 Почитать: <a href="https://docs.docker.com/compose/networking/#multiple-networks" target="_blank">Docker Compose: multiple networks</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-2-3"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-3"></label><span class="num">Шаг 2.3</span>PostgreSQL + Adminer<a class="anchor" href="#step-2-3">#</a></span><div class="step-body">
+<pre><code>  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: labpass
+      POSTGRES_DB: lab
+    networks: [backend]
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    networks: [traefik-public, backend]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adminer.rule=Host(`db.localhost`)"
+      - "traefik.http.routers.adminer.entrypoints=web"
+      - "traefik.http.routers.adminer.middlewares=dash-auth"
+      - "traefik.http.services.adminer.loadbalancer.server.port=8080"
+
+volumes:
+  db-data:</code></pre>
+<div class="why"><b>Зачем:</b> <code>db</code> не подключён к <code>traefik-public</code> вовсе — до него нельзя
+достучаться через Traefik ни при каком роутере, только изнутри сети <code>backend</code> (из <code>api</code> или
+<code>adminer</code>). Переиспользуем middleware <code>dash-auth</code> из шага 1.5 — админка БД не менее
+чувствительна, чем дашборд Traefik.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.4</span><ul><li>📖 Почитать: <a href="https://docs.docker.com/reference/dockerfile/#healthcheck" target="_blank">Docker docs: HEALTHCHECK</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-2-4"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-4"></label><span class="num">Шаг 2.4</span>Масштабирование API + healthcheck<a class="anchor" href="#step-2-4">#</a></span><div class="step-body">
+<pre><code>  api:
+    labels:
+      - "traefik.http.services.api.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.api.loadbalancer.healthcheck.interval=5s"</code></pre>
+<pre><code>docker compose up -d --scale api=3
+for i in 1 2 3 4 5 6; do curl -s -H "Host: api.localhost" http://localhost/users/1 | grep servedBy; done</code></pre>
+<div class="why"><b>Зачем:</b> без <code>healthcheck</code> Traefik продолжит слать трафик даже на реплику, у которой
+процесс жив, но приложение внутри зависло (например, потеряло соединение с БД). С healthcheck такая реплика
+исключается из ротации автоматически, как только два опроса подряд не прошли.</div>
+<details class="deep"><summary>🔬 Под капотом: почему curl показывает не идеальную ротацию 1-2-3-1-2-3</summary><div class="deep-body">
+<p>Round robin в Traefik — не гарантированно строгий циклический порядок между отдельными HTTP-запросами curl:
+на выбор влияет keep-alive соединений, порядок обнаружения реплик provider'ом и внутренний вес по умолчанию.
+На небольшом числе запросов распределение может выглядеть неровным; для честной проверки нужно 30-50 запросов
+и подсчёт по каждому hostname, а не разглядывание первых шести строк.</p>
+</div></details>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.5</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/ratelimit/" target="_blank">Traefik docs: RateLimit middleware</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-2-5"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-5"></label><span class="num">Шаг 2.5</span>Цепочка middlewares<a class="anchor" href="#step-2-5">#</a></span><div class="step-body">
+<pre><code># traefik/dynamic/middlewares.yml
+http:
+  middlewares:
+    api-ratelimit:
+      rateLimit:
+        average: 10
+        burst: 20
+    secure-headers:
+      headers:
+        accessControlAllowMethods: ["GET", "POST"]
+        accessControlAllowOriginList: ["https://app.localhost"]
+        stsSeconds: 31536000</code></pre>
+<pre><code>  api:
+    labels:
+      - "traefik.http.routers.api.middlewares=api-ratelimit,secure-headers"</code></pre>
+<div class="why"><b>Зачем:</b> вынесено в файловый provider (шаг 1.2), а не в labels — эти middlewares переиспользуют
+несколько сервисов, и дублировать их в labels каждого было бы избыточно (см. раздел <a href="#sec-2">2</a> про два provider'а).
+Порядок в списке — сначала лимит, потом заголовки, см. врезку в разделе <a href="#sec-7">7</a>.</div>
+<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-9">3.1</a></span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/headers/" target="_blank">Traefik docs: Headers middleware</a>.</li></ul></div>
+</div></div>
+
+<div class="session-banner" id="session-3">Сессия 3 — TLS и production hell <span>mkcert → Let's Encrypt → canary → задания без подсказок</span></div>
+
+<div class="step" id="step-3-1"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-3-1"></label><span class="num">Шаг 3.1</span>mkcert для локального TLS<a class="anchor" href="#step-3-1">#</a></span><div class="step-body">
+<pre><code>mkcert -install
+mkcert -key-file traefik/dynamic/app.localhost-key.pem \
+       -cert-file traefik/dynamic/app.localhost.pem \
+       "*.localhost" localhost</code></pre>
+<pre><code># traefik/dynamic/tls.yml
+tls:
+  certificates:
+    - certFile: /etc/traefik/dynamic/app.localhost.pem
+      keyFile: /etc/traefik/dynamic/app.localhost-key.pem</code></pre>
+<div class="why"><b>Зачем:</b> <code>mkcert -install</code> кладёт корневой сертификат mkcert в системное и браузерное
+хранилище доверия <i>только на вашей машине</i> — поэтому такие сертификаты валидны локально, но бесполезны, если
+их показать чужому браузеру. Это ровно то, что нужно для разработки: настоящий замочек в адресной строке без
+похода в интернет за реальным сертификатом.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.2</span><ul><li>📖 Почитать: <a href="https://letsencrypt.org/docs/staging-environment/" target="_blank">Let's Encrypt: Staging Environment</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-3-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-3-2"></label><span class="num">Шаг 3.2</span>Let's Encrypt (staging)<a class="anchor" href="#step-3-2">#</a></span><div class="step-body">
+<pre><code># traefik/traefik.yml — добавить
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: you@example.com
+      storage: /etc/traefik/acme/acme.json
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      httpChallenge:
+        entryPoint: web</code></pre>
+<pre><code>  api:
+    labels:
+      - "traefik.http.routers.api-secure.rule=Host(`api.example.com`)"
+      - "traefik.http.routers.api-secure.entrypoints=websecure"
+      - "traefik.http.routers.api-secure.tls.certresolver=letsencrypt"</code></pre>
+<div class="why"><b>Зачем:</b> HTTP-01 challenge требует, чтобы порт 80 реального публичного домена был доступен из
+интернета в момент выпуска сертификата — CA стучится по <code>http://ваш-домен/.well-known/acme-challenge/...</code>
+и сверяет ответ. Поэтому на локальной машине без публичного домена этот шаг можно только прочитать и понять, не
+выполняя буквально — либо арендовать домен и тестовый VPS.</div>
+<details class="deep"><summary>🔬 Под капотом: почему caServer — единственное отличие staging от продакшена</summary><div class="deep-body">
+<p>Весь остальной протокол ACME идентичен: тот же challenge, тот же формат запроса, тот же <code>acme.json</code>.
+Единственная разница — staging-CA использует собственный, публично <i>не</i>доверенный корневой сертификат, поэтому
+браузер будет ругаться, зато лимит запросов у staging на порядки выше продакшена (там: 50 сертификатов на домен в
+неделю, 5 неудачных попыток в час — легко выжечь при отладке compose-файла). Переключение — одна строка, без смены
+логики.</p>
+</div></details>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.3</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/routing/services/#weighted-round-robin-wrr" target="_blank">Traefik docs: Weighted Round Robin</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-3-3"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-3-3"></label><span class="num">Шаг 3.3</span>Canary — weighted round robin<a class="anchor" href="#step-3-3">#</a></span><div class="step-body">
+<pre><code>  api-v2:
+    build: ./api-v2
+    networks: [traefik-public, backend]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.api-v2.loadbalancer.server.port=3000"</code></pre>
+<pre><code># traefik/dynamic/canary.yml
+http:
+  services:
+    api-canary:
+      weighted:
+        services:
+          - name: api
+            weight: 9
+          - name: api-v2
+            weight: 1
+  routers:
+    api-canary:
+      rule: "Host(`api.localhost`)"
+      entrypoints: [web]
+      service: api-canary</code></pre>
+<div class="why"><b>Зачем:</b> 90/10 — типичная стартовая пропорция canary-релиза: большинство пользователей на
+проверенной версии, малая доля — на новой, под наблюдением метрик/логов. Если что-то не так — просто убираете
+<code>api-v2</code> из weighted-сервиса, без даунтайма для остальных 90%.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.4</span><ul><li>📖 Почитать: <a href="https://martinfowler.com/bliki/CanaryRelease.html" target="_blank">Martin Fowler: Canary Release</a>.</li></ul></div>
+</div></div>
+
+<div class="step" id="step-3-4"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-3-4"></label><span class="num">Шаг 3.4</span>Production Hell — задания без подсказок<a class="anchor" href="#step-3-4">#</a></span><div class="step-body">
+<p>Здесь нет готовых решений — только симптом. Найдите причину и почините сами, используя логи Traefik
+(<code>docker compose logs -f traefik</code>) и дашборд.</p>
+<ol>
+<li>Вы добавили новый сервис с правильными labels, но при <code>docker compose up -d</code> Traefik его не видит вообще — ни в дашборде, ни в логах ошибки нет.</li>
+<li>Два роутера с разными именами случайно матчат один и тот же Host без PathPrefix — какой выигрывает и как это проверить через дашборд?</li>
+<li>После включения Let's Encrypt контейнер Traefik падает при старте с ошибкой permission на <code>acme.json</code>.</li>
+<li>Healthcheck настроен, но Traefik продолжает слать 20% трафика на реплику, которая по факту уже перезапустилась с новым IP.</li>
+<li>StripPrefix настроен, но статические ассеты (<code>/app/static/main.js</code>) всё равно отдают 404, хотя <code>index.html</code> открывается нормально.</li>
+</ol>
+<div class="note-box"><span class="tag">ПОДСКАЗКА (не решение)</span>
+<p>Для каждого пункта задайте себе вопрос: это про <i>provider</i> (Traefik не знает о существовании), про
+<i>router</i> (знает, но не туда матчит), про <i>middleware</i> (матчит, но обрабатывает не так) или про
+<i>service</i> (доходит до backend'а, но backend не то возвращает)? Разделение по этим четырём слоям — универсальный
+способ локализовать проблему в любом инструменте, устроенном как Traefik.</p></div>
+</div></div>
+
+<h2 id="sec-10"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-10"></label>10. Полный чек-лист концепций <a class="anchor" href="#sec-10">#</a></h2>
+<ul>
+<li>Статическая vs динамическая конфигурация и почему первую нельзя менять без рестарта.</li>
+<li>EntryPoint, Router, Middleware, Service — и в каком порядке запрос через них проходит.</li>
+<li>Docker provider и <code>exposedByDefault=false</code>; когда нужен file provider вместо labels.</li>
+<li>Host-based vs Path-based routing; зачем нужен StripPrefix.</li>
+<li>Приоритет роутеров при пересекающихся правилах.</li>
+<li>Load balancing (round robin, weighted) и health check — как нездоровая реплика исключается из ротации.</li>
+<li>Порядок middlewares в цепочке и почему он влияет на видимость ошибок.</li>
+<li>mkcert для локального TLS vs Let's Encrypt ACME (HTTP-01) для продакшена; зачем staging-резолвер.</li>
+<li>Canary-деплой через weighted service.</li>
+<li>Защита дашборда/админки через basicAuth или forwardAuth.</li>
+<li>Изоляция сетей: почему БД не должна быть в той же сети, что и Traefik.</li>
+</ul>
+
+<h2 id="sec-11"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-11"></label>11. Глоссарий терминов <a class="anchor" href="#sec-11">#</a></h2>
+<p class="glossary-item" id="term-1"><b>1. Traefik</b> <a class="back" href="#ref-1" title="к первому упоминанию">↩</a> — reverse proxy и load balancer с автоматическим обнаружением сервисов (Docker, Kubernetes, Consul и др.).</p>
+<p class="glossary-item" id="term-2"><b>2. TLS</b> <a class="back" href="#ref-2" title="к первому упоминанию">↩</a> — протокол шифрования соединения (то, что даёт HTTPS вместо HTTP).</p>
+<p class="glossary-item" id="term-3"><b>3. Статическая конфигурация</b> <a class="back" href="#ref-3" title="к первому упоминанию">↩</a> — настройки, задаваемые при старте Traefik (файл/CLI/env): порты, providers, дашборд. Требует рестарта при изменении.</p>
+<p class="glossary-item" id="term-4"><b>4. Динамическая конфигурация</b> <a class="back" href="#ref-4" title="к первому упоминанию">↩</a> — роутеры, middlewares, сервисы, TLS-сертификаты. Обновляется на лету без рестарта Traefik.</p>
+<p class="glossary-item" id="term-5"><b>5. EntryPoint</b> <a class="back" href="#ref-5" title="к первому упоминанию">↩</a> — точка входа: сетевой порт, который слушает Traefik (например, <code>web</code>=80).</p>
+<p class="glossary-item" id="term-6"><b>6. Provider</b> <a class="back" href="#ref-6" title="к первому упоминанию">↩</a> — источник динамической конфигурации: Docker labels, файл, Kubernetes CRD, Consul и т.д.</p>
+<p class="glossary-item" id="term-7"><b>7. Router</b> <a class="back" href="#ref-7" title="к первому упоминанию">↩</a> — правило сопоставления входящего запроса (Host/Path/заголовки) с конкретным сервисом.</p>
+<p class="glossary-item" id="term-8"><b>8. Middleware</b> <a class="back" href="#ref-8" title="к первому упоминанию">↩</a> — обработчик, изменяющий запрос или ответ до/после доставки в сервис (auth, rate limit, заголовки и т.д.).</p>
+<p class="glossary-item" id="term-9"><b>9. Service</b> <a class="back" href="#ref-9" title="к первому упоминанию">↩</a> — описание одного или нескольких backend-серверов и алгоритма распределения трафика между ними.</p>
+<p class="glossary-item" id="term-10"><b>10. Round robin</b> <a class="back" href="#ref-10" title="к первому упоминанию">↩</a> — алгоритм балансировки, по очереди отправляющий запросы каждому серверу списка.</p>
+<p class="glossary-item" id="term-11"><b>11. Health check</b> <a class="back" href="#ref-11" title="к первому упоминанию">↩</a> — периодическая проверка живости backend'а; нездоровые серверы временно исключаются из балансировки.</p>
+<p class="glossary-item" id="term-12"><b>12. ForwardAuth</b> <a class="back" href="#ref-12" title="к первому упоминанию">↩</a> — middleware, делегирующее решение об авторизации внешнему HTTP-сервису (например, SSO) перед пропуском запроса дальше.</p>
+
+<h2 id="sec-12"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-12"></label>12. Вопросы для самопроверки / собеседования <a class="anchor" href="#sec-12">#</a></h2>
+<ul>
+<li>Чем статическая конфигурация отличается от динамической, и что из этого требует рестарта Traefik?</li>
+<li>Опишите путь запроса от EntryPoint до backend-контейнера — какие сущности он проходит и в каком порядке?</li>
+<li>Зачем нужен <code>exposedByDefault=false</code>, и что произойдёт, если его не выставить?</li>
+<li>Чем Host-based routing отличается от Path-based, и зачем в последнем случае нужен StripPrefix?</li>
+<li>Как Traefik решает, какой из двух пересекающихся роутеров выигрывает?</li>
+<li>Что делает health check, и что произойдёт с реплик без него, если внутри неё завис процесс?</li>
+<li>Почему порядок middlewares в цепочке важен? Приведите пример, когда неверный порядок маскирует настоящую ошибку.</li>
+<li>Чем mkcert отличается от Let's Encrypt, и почему для mkcert-сертификата не нужен реальный домен?</li>
+<li>Что такое HTTP-01 challenge и какое условие должно выполняться на сервере в момент выпуска сертификата?</li>
+<li>Зачем нужен staging-резолвер Let's Encrypt, если в итоге всё равно переключаться на продакшен?</li>
+<li>Как устроен canary-деплой через weighted service? Что произойдёт, если убрать одну из версий из веса?</li>
+<li>Почему монтирование <code>docker.sock</code> в контейнер Traefik — потенциальный риск безопасности, и как его снижают в проде?</li>
+<li>Зачем базу данных держат в отдельной сети, недоступной из сети Traefik?</li>
+</ul>
+
+<h2 id="sec-13"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-13"></label>13. Что дальше: дорожная карта после лабы <a class="anchor" href="#sec-13">#</a></h2>
+<table>
+<tr><th>Тема</th><th>Что это</th><th>Зачем после лабы</th><th>Почитать</th></tr>
+<tr><td>Traefik + Kubernetes Ingress/IngressRoute CRD</td><td>тот же Traefik как ingress-контроллер в кластере</td><td>переход от одной машины к оркестрации подов</td><td><a href="https://doc.traefik.io/traefik/providers/kubernetes-crd/" target="_blank">docs/kubernetes-crd</a></td></tr>
+<tr><td>docker-socket-proxy</td><td>прокси, отдающее Traefik только безопасный минимум Docker API</td><td>снять риск полного доступа к <code>docker.sock</code></td><td><a href="https://github.com/Tecnativa/docker-socket-proxy" target="_blank">Tecnativa/docker-socket-proxy</a></td></tr>
+<tr><td>ForwardAuth + SSO</td><td>единая точка авторизации перед несколькими приложениями</td><td>заменить basicAuth на что-то серьёзнее для проды</td><td><a href="https://doc.traefik.io/traefik/middlewares/http/forwardauth/" target="_blank">docs/forwardauth</a></td></tr>
+<tr><td>Prometheus + Grafana</td><td>метрики Traefik: запросы/сек, задержки, коды ответов по роутеру</td><td>наблюдаемость и алерты на 5xx/латентность</td><td><a href="https://doc.traefik.io/traefik/observability/metrics/prometheus/" target="_blank">docs/metrics/prometheus</a></td></tr>
+<tr><td>Distributed tracing</td><td>трассировка запроса через несколько сервисов (OpenTelemetry)</td><td>отладка «где именно медленно» в микросервисах</td><td><a href="https://doc.traefik.io/traefik/observability/tracing/overview/" target="_blank">docs/tracing</a></td></tr>
+<tr><td>HA Traefik (несколько инстансов)</td><td>несколько реплик Traefik + общий Consul/etcd provider</td><td>отказоустойчивость самого прокси, не только backend'ов</td><td><a href="https://doc.traefik.io/traefik/providers/consul/" target="_blank">docs/providers/consul</a></td></tr>
+<tr><td>mTLS между сервисами</td><td>взаимная TLS-аутентификация клиент↔Traefik↔backend</td><td>zero-trust сеть внутри кластера</td><td><a href="https://doc.traefik.io/traefik/https/mtls/" target="_blank">docs/mtls</a></td></tr>
+<tr><td>WAF / CrowdSec bouncer</td><td>middleware-плагин, блокирующий вредоносные IP на лету</td><td>защита от ботов/брутфорса перед публичным API</td><td><a href="https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin" target="_blank">Traefik Plugins: CrowdSec bouncer</a></td></tr>
+</table>
+
+<h2 id="sec-14"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-14"></label>14. Ваш сервер: адаптация под meeymirita.ru / 45.10.166.23 <a class="anchor" href="#sec-14">#</a></h2>
+<p>Всё, что было выше, использовало <code>*.localhost</code> — это специальный домен, который любой компьютер сам
+резолвит на <code>127.0.0.1</code>, без интернета и DNS. У вас есть реальный домен и реальный сервер, поэтому здесь —
+конкретная замена, шаг за шагом, без придумывания заново. Порты у вас свободны (вы подтвердили), поэтому конфликтов
+с уже висящим nginx не будет.</p>
+
+<h3>14.1 Схема доменов, которую используем</h3>
+<table>
+<tr><th>Поддомен</th><th>Что за ним будет</th><th>Защита</th></tr>
+<tr><td><code>meeymirita.ru</code> и <code>www.meeymirita.ru</code></td><td>frontend</td><td>открыто всем</td></tr>
+<tr><td><code>api.meeymirita.ru</code></td><td>backend API</td><td>rate-limit (шаг <a href="#step-2-5">2.5</a>)</td></tr>
+<tr><td><code>panel.meeymirita.ru</code></td><td>дашборд Traefik (<code>api@internal</code>)</td><td>basicAuth (шаг <a href="#step-1-5">1.5</a>)</td></tr>
+<tr><td><code>db.meeymirita.ru</code></td><td>Adminer (админка PostgreSQL)</td><td>basicAuth</td></tr>
+</table>
+
+<h3>14.2 DNS: A-записи</h3>
+<p>В панели управления доменом (там, где вы регистрировали <code>meeymirita.ru</code> — Reg.ru, Timeweb и т.п.)
+добавьте A-записи, все указывающие на один и тот же IP вашего сервера:</p>
+<pre><code>Тип   Имя      Значение
+A     @        45.10.166.23      (это сам meeymirita.ru)
+A     www      45.10.166.23
+A     api      45.10.166.23
+A     panel    45.10.166.23
+A     db       45.10.166.23</code></pre>
+<div class="why"><b>Зачем:</b> Traefik сам по себе не «владеет» доменом — маршрутизация по <code>Host()</code> работает
+только если браузер вообще смог узнать IP по имени. Пока DNS не настроен, <code>api.meeymirita.ru</code> просто не
+будет открываться, и дело будет не в Traefik.</div>
+<div class="note-box"><span class="tag">DNS-ПРОПАГАЦИЯ</span>
+<p>После сохранения записей подождите от 5 минут до пары часов (зависит от регистратора и TTL) и проверьте:</p>
+<pre><code>nslookup api.meeymirita.ru
+# должно вернуть 45.10.166.23</code></pre>
+<p>Не переходите к сертификатам (14.5), пока эта команда не отдаёт правильный IP для всех четырёх поддоменов.</p></div>
+
+<h3>14.3 Файрвол на сервере</h3>
+<p>Порты свободны, но убедитесь, что файрвол реально пропускает 80 и 443 снаружи — это частая причина «DNS настроен,
+контейнер запущен, а сайт не открывается»:</p>
+<pre><code># если используется ufw
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw status
+
+# если сервер в облаке (Timeweb Cloud, VK Cloud и т.п.) — дополнительно
+# откройте 80/443 в security group / файрволе облака в панели провайдера,
+# ufw на самом сервере эту настройку не заменяет</code></pre>
+
+<h3>14.4 Замена labels: было / стало</h3>
+<p>Везде по документу, где встречается <code>*.localhost</code>, для вашего сервера меняем так:</p>
+<table>
+<tr><th>Было (лаба)</th><th>Стало (ваш сервер)</th><th>Где встречается</th></tr>
+<tr><td><code>Host(`whoami.localhost`)</code></td><td>можно удалить — <code>whoami</code> был только для проверки, в проде не нужен</td><td>шаг 1.3–1.4</td></tr>
+<tr><td><code>Host(`dashboard.localhost`)</code></td><td><code>Host(`panel.meeymirita.ru`)</code></td><td>шаг 1.5</td></tr>
+<tr><td><code>Host(`api.localhost`)</code></td><td><code>Host(`api.meeymirita.ru`)</code></td><td>шаг 2.1, 2.4, 2.5</td></tr>
+<tr><td><code>Host(`app.localhost`) && PathPrefix(`/app`)</code></td><td><code>Host(`meeymirita.ru`)</code> (без PathPrefix — фронтенд теперь на корне)</td><td>шаг 2.2</td></tr>
+<tr><td><code>Host(`db.localhost`)</code></td><td><code>Host(`db.meeymirita.ru`)</code></td><td>шаг 2.3</td></tr>
+</table>
+<div class="insight-box">
+<span class="tag">💡 Почему для frontend убираем PathPrefix и StripPrefix</span>
+<p>В учебном варианте <code>app.localhost/app</code> нужен был, чтобы показать path-based routing отдельно от
+host-based (раздел <a href="#sec-7">7</a>) — сам приём стоит понимать, но на реальном сайте так не делают: главная
+страница живёт на корне домена. Поэтому на вашем сервере у frontend — просто <code>Host(`meeymirita.ru`)</code>,
+без <code>stripPrefix</code> и без <code>/app</code> в пути.</p>
+</div>
+
+<h3>14.5 TLS: сразу продакшен, но сначала — staging-проверка</h3>
+<p>У вас реальный домен, доступный из интернета, — HTTP-01 challenge (раздел <a href="#sec-8">8</a>) заработает по-настоящему.
+Но всё равно сначала прогоните staging-резолвер (шаг <a href="#step-3-2">3.2</a>) один раз целиком, чтобы убедиться,
+что DNS, файрвол и labels настроены верно — и только потом переключайтесь на боевой CA. Причина та же, что и в
+разделе <a href="#sec-8">8</a>: у продакшен Let's Encrypt жёсткий лимит (5 неудачных попыток в час на домен), и
+опечатку в label лучше словить на staging, где лимит не жалко потратить.</p>
+<pre><code># traefik/traefik.yml — итоговая статическая конфигурация под ваш сервер
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik-public
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: ваш-настоящий-email@meeymirita.ru
+      storage: /etc/traefik/acme/acme.json
+      # ШАГ 1: сначала проверяем на staging
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      httpChallenge:
+        entryPoint: web</code></pre>
+<div class="why"><b>Зачем блок <code>web.http.redirections</code>:</b> на реальном сайте нельзя оставлять рабочий
+HTTP рядом с HTTPS — пользователь, зашедший по старой ссылке на <code>http://meeymirita.ru</code>, должен
+автоматически попасть на <code>https://</code>. Эта настройка EntryPoint'а <code>web</code> делает редирект
+глобально, для всех роутеров сразу, без отдельного middleware на каждом сервисе.</div>
+
+<h3>14.6 Готовый пример: сервис frontend целиком под ваш домен</h3>
+<pre><code>  frontend:
+    build: ./frontend
+    networks: [traefik-public]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`meeymirita.ru`) || Host(`www.meeymirita.ru`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"</code></pre>
+<p>По тому же образцу переносите остальные роутеры (<code>api</code>, <code>dashboard</code>→<code>panel</code>,
+<code>adminer</code>→<code>db</code>) из таблицы 14.4: меняете <code>rule</code> на реальный домен, добавляете
+<code>entrypoints=websecure</code> и <code>tls.certresolver=letsencrypt</code>, отдельный роутер на
+<code>entrypoints=web</code> для них больше не нужен — редирект теперь глобальный (14.5).</p>
+
+<h3>14.7 Порядок первого запуска на сервере</h3>
+<ol>
+<li>DNS-записи добавлены, <code>nslookup</code> для всех четырёх поддоменов отдаёт <code>45.10.166.23</code> (14.2).</li>
+<li>Файрвол пропускает 80/443 (14.3).</li>
+<li>Сначала поднимите всё <b>без TLS</b> — только с <code>entrypoints=web</code> и реальными доменами вместо <code>*.localhost</code> — и проверьте <code>curl http://api.meeymirita.ru/health</code> с самого сервера и снаружи.</li>
+<li>Добавьте блок <code>certificatesResolvers</code> со staging-CA (14.5), переключите роутеры на <code>websecure</code> + <code>tls.certresolver</code>, поднимите заново, проверьте в браузере (будет предупреждение о недоверенном сертификате — это ожидаемо для staging).</li>
+<li>Уберите строку <code>caServer</code> целиком (без неё Traefik по умолчанию использует боевой Let's Encrypt), пересоздайте контейнер Traefik, чтобы staging-сертификаты в <code>acme.json</code> не мешали — проще всего один раз очистить файл (<code>echo '{}' &gt; traefik/acme/acme.json</code>) и поднять заново.</li>
+</ol>
+<div class="fix-box"><span class="tag">✅ ЧТО ПРОВЕРИТЬ, ЕСЛИ НЕ ЗАРАБОТАЛО</span>
+<p>В таком порядке: DNS (14.2) → файрвол (14.3) → <code>docker compose logs -f traefik</code> на предмет ошибок ACME
+→ правильность <code>Host()</code> в labels (опечатка в домене — самая частая причина). Раздел <a href="#step-3-4">3.4</a>
+(«Production Hell») даёт общий метод отладки по слоям provider/router/middleware/service — он применим и здесь.</p></div>
+
+</main>
+</div>
+<a class="totop" href="#top">↑ Наверх</a>
+
+<script>
+(function () {
+  var KEY = 'traefik-lab-progress', NAVKEY = 'traefik-lab-nav';
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  var boxes = document.querySelectorAll('input.done');
+  function apply() {
+    var total = boxes.length, done = 0;
+    boxes.forEach(function (b) {
+      var k = b.dataset.key, on = !!state[k];
+      b.checked = on; if (on) done++;
+      var host = b.closest('.step') || b.closest('h2');
+      if (host) host.classList.toggle('is-done', on);
+      var nav = document.querySelector('.sidebar a[data-key="' + k + '"]');
+      if (nav) nav.classList.toggle('done', on);
+    });
+    document.getElementById('progress-fill').style.width = (total ? done / total * 100 : 0) + '%';
+    document.getElementById('progress-text').textContent = 'Пройдено: ' + done + ' / ' + total;
+  }
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.key] = b.checked;
+      localStorage.setItem(KEY, JSON.stringify(state));
+      apply();
+    });
+  });
+  document.getElementById('reset-progress').addEventListener('click', function () {
+    if (confirm('Сбросить все отметки?')) { state = {}; localStorage.removeItem(KEY); apply(); }
+  });
+  apply();
+
+  var toggle = document.getElementById('nav-toggle');
+  function setNav(collapsed) {
+    document.body.classList.toggle('nav-collapsed', collapsed);
+    localStorage.setItem(NAVKEY, collapsed ? '1' : '0');
+    toggle.textContent = collapsed ? '☰' : '✕';
+    toggle.title = collapsed ? 'Показать оглавление' : 'Скрыть оглавление';
+  }
+  toggle.addEventListener('click', function () { setNav(!document.body.classList.contains('nav-collapsed')); });
+  setNav(localStorage.getItem(NAVKEY) === '1' || window.innerWidth < 900);
+
+  document.querySelectorAll('.done-label').forEach(function (l) { l.addEventListener('click', function (e) { e.stopPropagation(); }); });
+})();
+</script>
+</body>
+</html>
