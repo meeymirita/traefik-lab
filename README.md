@@ -1,6 +1,6 @@
 # Traefik Lab — reverse proxy, service discovery, TLS
 
-![Docker](docker.png)
+![Traefik](traefik.png)
 
 **Статус: ⚪ методичка готова, прохождение впереди.**
 **Сложность: низкая–средняя** (инфраструктурная, не про код — backend/frontend уже даны готовыми). Нужен Docker Compose на уровне «поднять сервис и почитать логи»; для новичков в контейнерах есть отдельный вводный раздел 0.
@@ -15,7 +15,7 @@ Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API +
 
 ## Формат
 
-Методичка [`Traefik_Lab_Plan.html`](Traefik_Lab_Plan.html) — открывается в браузере. Есть отдельный раздел 0 "Введение в Docker с нуля" для тех, кто раньше не работал с контейнерами.
+Методичка [`Docker_and_Traefik_Lab_Plan.html`](Docker_and_Traefik_Lab_Plan.html) — открывается в браузере. Есть отдельный раздел 0 "Введение в Docker с нуля" для тех, кто раньше не работал с контейнерами.
 
 ## Что внутри (3 сессии)
 
