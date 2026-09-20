@@ -522,6 +522,7 @@ GET https://api.localhost/users/42
 <div class="session-banner" id="session-1">Сессия 1 — базовая инфраструктура <span>Traefik + первый маршрут + защита дашборда</span></div>
 
 <div class="step" id="step-1-1"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-1"></label><span class="num">Шаг 1.1</span>Создаём каталоги<a class="anchor" href="#step-1-1">#</a></span><div class="step-body">
+<div class="note-box"><span class="tag">УЖЕ В РЕПО</span> Каталоги <code>api/</code>, <code>frontend/</code>, <code>db/</code>, <code>traefik/dynamic/</code>, <code>traefik/acme/</code> уже созданы (заглушки <code>.gitkeep</code>), и <code>traefik/acme/acme.json</code> уже существует с правами <code>600</code> — эту команду можно пропустить целиком либо выполнить поверх, ничего не сломается.</div>
 <pre><code>mkdir -p traefik-lab/{traefik/dynamic,traefik/acme,api,frontend,db}
 cd traefik-lab
 touch traefik/acme/acme.json && chmod 600 traefik/acme/acme.json</code></pre>
