@@ -250,7 +250,7 @@ Docker сам поднимает внутренний DNS. Если в <span cla
 <code>db</code>, то из сервиса <code>api</code> к нему можно обратиться просто как <code>db:5432</code>, без
 всякого IP-адреса — Docker сам его подставит.</p>
 <div class="note-box"><span class="tag">ЭТО КЛЮЧЕВАЯ ИДЕЯ ДЛЯ ВСЕЙ ЛАБЫ</span>
-<p>Traefik работает ровно так же: когда в разделе <a href="#sec-5">5</a> вы увидите
+<p>Traefik работает ровно так же: когда в шаге <a href="#step-2-1">2.1</a> вы увидите
 <code>traefik.http.services.api.loadbalancer.server.port=3000</code> — это именно порт <i>внутри</i> сети Docker,
 куда Traefik стучится по внутреннему имени сервиса <code>api</code>, а не порт, открытый наружу на вашем
 компьютере. Наружу в итоге открыт только сам Traefik (порты 80/443), а всё остальное общается друг с другом
@@ -311,7 +311,7 @@ Traefik решает всё это одним слоем: один вход, м�
 <tr><th>Нюанс</th><th>Что происходит без доработки</th><th>Как сделано в лабе</th></tr>
 <tr><td>Дашборд без пароля</td><td>любой в локальной сети открывает <code>/dashboard</code> и видит всю топологию</td><td>middleware <code>basicauth</code> на роутере дашборда (шаг <a href="#step-1-5">1.5</a>)</td></tr>
 <tr><td>TLS сразу через Let's Encrypt</td><td>rate-limit продакшен-CA при каждом рестарте контейнера во время обучения</td><td>сначала mkcert локально (шаг <a href="#step-3-1">3.1</a>), потом staging-резолвер (шаг <a href="#step-3-2">3.2</a>)</td></tr>
-<tr><td>Один Docker provider на всё</td><td>неочевидно, что делать с сервисами без Docker (внешняя БД, legacy-хост)</td><td>раздел <a href="#sec-5">5</a> объясняет providers и когда нужен file provider вместо labels</td></tr>
+<tr><td>Один Docker provider на всё</td><td>неочевидно, что делать с сервисами без Docker (внешняя БД, legacy-хост)</td><td>раздел <a href="#sec-2">2</a> объясняет providers и когда нужен file provider вместо labels</td></tr>
 <tr><td>Масштабирование без healthcheck</td><td>Traefik будет слать трафик и на ещё не готовую, и на упавшую реплику</td><td>шаг <a href="#step-2-4">2.4</a>: <code>healthcheck</code> label + graceful старт</td></tr>
 </table>
 
@@ -376,7 +376,7 @@ legacy-серверу на другой машине. Для этого есть
                                    └─────────────┘
 </pre>
 <p>Все сервисы сидят в одной Docker-сети <code>traefik-public</code> (шаг <a href="#step-1-3">1.3</a>); наружу открыт только
-сам Traefik. PostgreSQL и API дополнительно используют внутреннюю сеть <code>backend</code>, недоступную из <code>traefik-public</code> —
+сам Traefik. PostgreSQL, API и Adminer дополнительно используют внутреннюю сеть <code>backend</code>, недоступную из <code>traefik-public</code> —
 Traefik физически не может замаршрутизировать трафик напрямую в БД, только через API или Adminer.</p>
 
 <div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-4">4</a></span>
@@ -389,7 +389,7 @@ Traefik физически не может замаршрутизировать 
 <tr><td>Контейнеризация</td><td>Docker Compose (совместимо с Podman + podman-compose)</td><td>единый манифест для всех сервисов</td></tr>
 <tr><td>Backend API</td><td>Node.js 20 + Express</td><td>лёгкий, быстрый health-эндпоинт, удобно масштабировать</td></tr>
 <tr><td>Frontend</td><td>статический билд + nginx:alpine</td><td>показать path-based routing отдельно от host-based</td></tr>
-<tr><td>БД</td><td>PostgreSQL 16</td><td>реальный сервис за приватной сетью</td></tr>
+<tr><td>БД</td><td>PostgreSQL 17</td><td>реальный сервис за приватной сетью</td></tr>
 <tr><td>Админка БД</td><td>adminer</td><td>второй Host-роутер для отработки нескольких доменов</td></tr>
 <tr><td>Локальный TLS</td><td>mkcert</td><td>доверенный сертификат в браузере без предупреждений</td></tr>
 </table>
@@ -463,7 +463,7 @@ GET https://api.localhost/users/42
 </pre>
 <ol>
 <li>Запрос приходит на EntryPoint <code>websecure</code> (:443). TLS terminates здесь — контейнер API про HTTPS не знает вообще.</li>
-<li>Traefik ищет среди всех роутеров тот, чей <code>rule</code> совпадает: <code>Host(\`api.localhost\`)</code>. Если совпало несколько правил — побеждает более специфичное (длиннее по правилу), либо явный <code>priority</code>.</li>
+<li>Traefik ищет среди всех роутеров тот, чей <code>rule</code> совпадает: <code>Host(`api.localhost`)</code>. Если совпало несколько правил — побеждает более специфичное (длиннее по правилу), либо явный <code>priority</code>.</li>
 <li>Запрос проходит цепочку middlewares роутера по порядку: например, <code>ratelimit → headers</code> (раздел <a href="#sec-7">7</a>).</li>
 <li>Router передаёт запрос в <code>service</code>: если реплик несколько — балансировщик (round robin по умолчанию) выбирает живую, здоровую реплику по последнему известному healthcheck.</li>
 <li>Ответ идёт обратно тем же путём; Traefik добавляет заголовки вроде <code>X-Forwarded-For</code>, чтобы API знал реальный IP клиента.</li>
@@ -475,7 +475,7 @@ GET https://api.localhost/users/42
 <table>
 <tr><th>Middleware</th><th>Что делает</th><th>Где используем в лабе</th></tr>
 <tr><td>basicAuth</td><td>простая HTTP-авторизация</td><td>защита дашборда (шаг <a href="#step-1-5">1.5</a>)</td></tr>
-<tr><td>stripPrefix</td><td>убирает часть пути перед отправкой в сервис</td><td>frontend по <code>PathPrefix(\`/app\`)</code> (шаг <a href="#step-2-2">2.2</a>)</td></tr>
+<tr><td>stripPrefix</td><td>убирает часть пути перед отправкой в сервис</td><td>frontend по <code>PathPrefix(`/app`)</code> (шаг <a href="#step-2-2">2.2</a>)</td></tr>
 <tr><td>rateLimit</td><td>ограничивает запросы в секунду с IP/ключа</td><td>API (шаг <a href="#step-2-5">2.5</a>)</td></tr>
 <tr><td>headers</td><td>CORS, security-заголовки (HSTS, X-Frame-Options)</td><td>общий middleware в <span class="file">dynamic/middlewares.yml</span></td></tr>
 <tr><td>retry</td><td>повторяет запрос к другой реплике при обрыве соединения</td><td>опционально на API</td></tr>
@@ -522,13 +522,23 @@ GET https://api.localhost/users/42
 <div class="session-banner" id="session-1">Сессия 1 — базовая инфраструктура <span>Traefik + первый маршрут + защита дашборда</span></div>
 
 <div class="step" id="step-1-1"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-1"></label><span class="num">Шаг 1.1</span>Создаём каталоги<a class="anchor" href="#step-1-1">#</a></span><div class="step-body">
-<div class="note-box"><span class="tag">УЖЕ В РЕПО</span> Каталоги <code>api/</code>, <code>frontend/</code>, <code>db/</code>, <code>traefik/dynamic/</code>, <code>traefik/acme/</code> уже созданы (заглушки <code>.gitkeep</code>), и <code>traefik/acme/acme.json</code> уже существует с правами <code>600</code> — эту команду можно пропустить целиком либо выполнить поверх, ничего не сломается.</div>
-<pre><code>mkdir -p traefik-lab/{traefik/dynamic,traefik/acme,api,frontend,db}
-cd traefik-lab
+<div class="note-box"><span class="tag">УЖЕ В РЕПО</span> Каталоги <code>api/</code>, <code>frontend/</code>, <code>db/</code>, <code>traefik/dynamic/</code>, <code>traefik/acme/</code> уже созданы (заглушки <code>.gitkeep</code>) прямо в корне уже склонированного репозитория — все пути ниже (<code>./api</code>, <code>./frontend</code> и т.д.) даны от этого корня, без дополнительной обёртки. Команда ниже нужна, только если вы начинаете проект с нуля не из этого репозитория.</div>
+<pre><code>mkdir -p traefik/dynamic traefik/acme api frontend db
 touch traefik/acme/acme.json && chmod 600 traefik/acme/acme.json</code></pre>
 <div class="why"><b>Зачем:</b> <code>acme.json</code> должен существовать заранее и иметь права <code>600</code> — иначе
 ACME-клиент Traefik откажется его использовать (Let's Encrypt требует, чтобы файл с приватными ключами не был
-доступен на чтение другим пользователям).</div>
+доступен на чтение другим пользователям). В самом репозитории файл лежит с правами <code>644</code> (git не хранит
+unix-права, кроме бита исполняемости), поэтому <code>chmod 600 traefik/acme/acme.json</code> — обязательный шаг
+перед Let's Encrypt (шаг <a href="#step-3-2">3.2</a>), а не опция «если вдруг понадобится».</div>
+<pre><code># .env — секреты и локальные настройки, в git не коммитим
+cat &gt; .env &lt;&lt;'EOF'
+POSTGRES_PASSWORD=labpass
+ACME_EMAIL=you@example.com
+EOF</code></pre>
+<div class="why"><b>Зачем .env:</b> как и в Docker-лабе, секреты (пароль БД, email для Let's Encrypt) не хардкодятся
+в файлах, которые попадают в репозиторий, а держатся в <code>.env</code> — Docker Compose сам подставляет
+<code>${POSTGRES_PASSWORD}</code> и подобные значения из этого файла при чтении <code>docker-compose.yml</code>
+(см. шаги <a href="#step-2-3">2.3</a> и <a href="#step-3-2">3.2</a>).</div>
 </div></div>
 
 <div class="step" id="step-1-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-2"></label><span class="num">Шаг 1.2</span>traefik/traefik.yml — статическая конфигурация<a class="anchor" href="#step-1-2">#</a></span><div class="step-body">
@@ -560,6 +570,10 @@ log:
 </div></div>
 
 <div class="step" id="step-1-3"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-3"></label><span class="num">Шаг 1.3</span>docker-compose.yml — база<a class="anchor" href="#step-1-3">#</a></span><div class="step-body">
+<p><b>Формат <code>volumes</code>:</b> <code>host:container</code> плюс необязательный третий сегмент после второго
+двоеточия — режим монтирования: <code>ro</code> (read-only, только чтение) или <code>rw</code> (read-write, режим
+по умолчанию, можно не писать явно). Ниже сокет Docker и конфиги Traefik монтируются с <code>:ro</code> — контейнер
+их не должен изменять.</p>
 <pre><code># docker-compose.yml
 networks:
   traefik-public:
@@ -608,8 +622,8 @@ curl -H "Host: whoami.localhost" http://localhost</code></pre>
 </div></div>
 
 <div class="step" id="step-1-4"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-1-4"></label><span class="num">Шаг 1.4</span>Первый роутер — labels на whoami<a class="anchor" href="#step-1-4">#</a></span><div class="step-body">
-<p>Шаг 1.3 уже дал вам рабочий Host-based роутер. Здесь — проверка, что вы понимаете, что произошло, плюс второй
-роутер с явным приоритетом.</p>
+<p>Шаг 1.3 уже дал вам рабочий Host-based роутер. Здесь — проверка, что вы понимаете, что произошло, плюс явный
+приоритет у того же роутера.</p>
 <pre><code>    labels:
       - "traefik.enable=true"
       - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
@@ -617,7 +631,7 @@ curl -H "Host: whoami.localhost" http://localhost</code></pre>
       - "traefik.http.routers.whoami.priority=1"
       - "traefik.http.services.whoami.loadbalancer.server.port=80"</code></pre>
 <div class="why"><b>Зачем:</b> явный <code>priority</code> нужен, когда два правила пересекаются — например,
-<code>Host(\`app.localhost\`)</code> и <code>Host(\`app.localhost\`) && PathPrefix(\`/api\`)</code>. Без явного
+<code>Host(`app.localhost`)</code> и <code>Host(`app.localhost`) && PathPrefix(`/api`)</code>. Без явного
 приоритета Traefik сам вычисляет его по длине правила, но в сложных стеках это неочевидно, и лучше не полагаться на угадывание.</div>
 <div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 1.5</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/basicauth/" target="_blank">Traefik docs: BasicAuth middleware</a>.</li></ul></div>
 </div></div>
@@ -634,7 +648,7 @@ curl -H "Host: whoami.localhost" http://localhost</code></pre>
       - "traefik.http.routers.dashboard.middlewares=dash-auth"
       - "traefik.http.middlewares.dash-auth.basicauth.users=admin:$$apr1$$xxxxxxxx$$yyyyyyyyyyyyyyyyyyyyyy"</code></pre>
 <div class="why"><b>Зачем:</b> <code>service=api@internal</code> — специальный встроенный сервис, который отдаёт
-сам дашборд; без него label <code>api.dashboard=true</code> из шага 1.2 включает API, но не создаёт к нему маршрут.
+сам дашборд; без него опция <code>api.dashboard: true</code> из <code>traefik.yml</code> (шаг 1.2) включает API, но не создаёт к нему маршрут.
 Двойной <code>$$</code> — экранирование <code>$</code> для docker-compose, который иначе примет его за переменную окружения.</div>
 <details class="deep"><summary>🔬 Под капотом: почему basicauth, а не «просто не публиковать порт»</summary><div class="deep-body">
 <p>Дашборд и так не «публикуется» отдельным портом — он идёт через тот же EntryPoint <code>web</code>, что и
@@ -660,7 +674,7 @@ API, и Traefik-у всё равно, что за движок его обслу
 <p>В rootless Podman по умолчанию сети называются иначе, чем в Docker Compose v2. Если Traefik не видит контейнеры,
 первым делом проверьте: <code>podman network ls</code> и убедитесь, что значение <code>providers.docker.network</code>
 в <span class="file">traefik.yml</span> совпадает с реальным именем сети из <code>podman-compose</code>.</p></div>
-<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-9">2.1</a></span><ul><li>📖 Почитать: <a href="https://docs.podman.io/en/latest/markdown/podman-system-service.1.html" target="_blank">Podman docs: podman system service</a>.</li></ul></div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.1</span><ul><li>📖 Почитать: <a href="https://docs.podman.io/en/latest/markdown/podman-system-service.1.html" target="_blank">Podman docs: podman system service</a>.</li></ul></div>
 </div></div>
 
 <div class="session-banner" id="session-2">Сессия 2 — реальные сервисы <span>API + frontend + БД + балансировка</span></div>
@@ -674,6 +688,16 @@ app.get('/health', (_, res) =&gt; res.json({ status: 'ok' }));
 app.get('/users/:id', (req, res) =&gt;
   res.json({ id: req.params.id, servedBy: os.hostname() }));
 app.listen(3000, () =&gt; console.log('api on :3000'));</code></pre>
+<pre><code>// api/package.json
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}</code></pre>
 <pre><code># api/Dockerfile
 FROM node:20-alpine
 WORKDIR /app
@@ -695,6 +719,12 @@ CMD ["node", "server.js"]</code></pre>
 </div></div>
 
 <div class="step" id="step-2-2"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-2"></label><span class="num">Шаг 2.2</span>Frontend — path routing + StripPrefix<a class="anchor" href="#step-2-2">#</a></span><div class="step-body">
+<pre><code># статика для проверки — хватит одной страницы (в реальном проекте сюда кладут результат сборки фронта)
+mkdir -p frontend/dist
+echo '&lt;h1&gt;Frontend через Traefik&lt;/h1&gt;' &gt; frontend/dist/index.html</code></pre>
+<pre><code># frontend/Dockerfile
+FROM nginx:alpine
+COPY dist/ /usr/share/nginx/html/</code></pre>
 <pre><code>  frontend:
     build: ./frontend
     networks: [traefik-public]
@@ -720,9 +750,9 @@ Traefik здесь работает ровно как настроено.</p>
 
 <div class="step" id="step-2-3"><span class="step-head"><label class="done-label" title="Отметить шаг пройденным"><input type="checkbox" class="done" data-key="step-2-3"></label><span class="num">Шаг 2.3</span>PostgreSQL + Adminer<a class="anchor" href="#step-2-3">#</a></span><div class="step-body">
 <pre><code>  db:
-    image: postgres:16
+    image: postgres:17
     environment:
-      POSTGRES_PASSWORD: labpass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: lab
     networks: [backend]
     volumes:
@@ -743,7 +773,9 @@ volumes:
 <div class="why"><b>Зачем:</b> <code>db</code> не подключён к <code>traefik-public</code> вовсе — до него нельзя
 достучаться через Traefik ни при каком роутере, только изнутри сети <code>backend</code> (из <code>api</code> или
 <code>adminer</code>). Переиспользуем middleware <code>dash-auth</code> из шага 1.5 — админка БД не менее
-чувствительна, чем дашборд Traefik.</div>
+чувствительна, чем дашборд Traefik. Пароль берётся из <code>${POSTGRES_PASSWORD}</code>, а не прописан прямо в
+compose — Docker Compose сам подставляет значение из <code>.env</code> (шаг <a href="#step-1-1">1.1</a>) при чтении файла,
+так что секрет не попадает в сам <code>docker-compose.yml</code> и, соответственно, в репозиторий.</div>
 <div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 2.4</span><ul><li>📖 Почитать: <a href="https://docs.docker.com/reference/dockerfile/#healthcheck" target="_blank">Docker docs: HEALTHCHECK</a>.</li></ul></div>
 </div></div>
 
@@ -756,7 +788,11 @@ volumes:
 for i in 1 2 3 4 5 6; do curl -s -H "Host: api.localhost" http://localhost/users/1 | grep servedBy; done</code></pre>
 <div class="why"><b>Зачем:</b> без <code>healthcheck</code> Traefik продолжит слать трафик даже на реплику, у которой
 процесс жив, но приложение внутри зависло (например, потеряло соединение с БД). С healthcheck такая реплика
-исключается из ротации автоматически, как только два опроса подряд не прошли.</div>
+исключается из ротации автоматически, как только два опроса подряд не прошли. Флаг <code>--scale &lt;сервис&gt;=&lt;N&gt;</code>
+поднимает N независимых контейнеров одного и того же сервиса из одного образа (см. раздел <a href="#sec-0">0.2</a>);
+это работает только если у сервиса нет фиксированного <code>ports:</code> и <code>container_name</code> — иначе N
+контейнеров конфликтуют за один и тот же порт хоста или имя. У <code>api</code> в этой лабе ни того, ни другого нет
+как раз по этой причине.</div>
 <details class="deep"><summary>🔬 Под капотом: почему curl показывает не идеальную ротацию 1-2-3-1-2-3</summary><div class="deep-body">
 <p>Round robin в Traefik — не гарантированно строгий циклический порядок между отдельными HTTP-запросами curl:
 на выбор влияет keep-alive соединений, порядок обнаружения реплик provider'ом и внутренний вес по умолчанию.
@@ -781,11 +817,11 @@ http:
         stsSeconds: 31536000</code></pre>
 <pre><code>  api:
     labels:
-      - "traefik.http.routers.api.middlewares=api-ratelimit,secure-headers"</code></pre>
+      - "traefik.http.routers.api.middlewares=secure-headers,api-ratelimit"</code></pre>
 <div class="why"><b>Зачем:</b> вынесено в файловый provider (шаг 1.2), а не в labels — эти middlewares переиспользуют
 несколько сервисов, и дублировать их в labels каждого было бы избыточно (см. раздел <a href="#sec-2">2</a> про два provider'а).
-Порядок в списке — сначала лимит, потом заголовки, см. врезку в разделе <a href="#sec-7">7</a>.</div>
-<div class="next-box"><span class="tag">ПЕРЕД РАЗДЕЛОМ <a href="#sec-9">3.1</a></span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/headers/" target="_blank">Traefik docs: Headers middleware</a>.</li></ul></div>
+Порядок в списке — сначала заголовки (там же CORS), потом лимит, см. врезку в разделе <a href="#sec-7">7</a>.</div>
+<div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.1</span><ul><li>📖 Почитать: <a href="https://doc.traefik.io/traefik/middlewares/http/headers/" target="_blank">Traefik docs: Headers middleware</a>.</li></ul></div>
 </div></div>
 
 <div class="session-banner" id="session-3">Сессия 3 — TLS и production hell <span>mkcert → Let's Encrypt → canary → задания без подсказок</span></div>
@@ -804,6 +840,17 @@ tls:
 хранилище доверия <i>только на вашей машине</i> — поэтому такие сертификаты валидны локально, но бесполезны, если
 их показать чужому браузеру. Это ровно то, что нужно для разработки: настоящий замочек в адресной строке без
 похода в интернет за реальным сертификатом.</div>
+<p>Сам по себе <code>tls.yml</code> ничего не подключает — нужен роутер на <code>websecure</code> с <code>tls=true</code>,
+чтобы Traefik вообще стал подавать этот сертификат:</p>
+<pre><code>  whoami:
+    labels:
+      - "traefik.http.routers.whoami-secure.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami-secure.entrypoints=websecure"
+      - "traefik.http.routers.whoami-secure.tls=true"</code></pre>
+<pre><code>curl -v https://whoami.localhost 2&gt;&amp;1 | grep -i "issuer\|subject\|< HTTP"</code></pre>
+<div class="why"><b>Проверка:</b> команда должна отдать <code>HTTP/2 200</code> без предупреждений <code>curl</code>
+о недоверенном сертификате (раз <code>mkcert -install</code> уже добавил CA в системное хранилище) — в
+<code>issuer</code>/<code>subject</code> будет видно имя корня mkcert, а не Let's Encrypt.</div>
 <div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.2</span><ul><li>📖 Почитать: <a href="https://letsencrypt.org/docs/staging-environment/" target="_blank">Let's Encrypt: Staging Environment</a>.</li></ul></div>
 </div></div>
 
@@ -817,6 +864,15 @@ certificatesResolvers:
       caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       httpChallenge:
         entryPoint: web</code></pre>
+<pre><code># docker-compose.yml — сервис traefik: переопределяем email из .env, не трогая traefik.yml
+  traefik:
+    command:
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"</code></pre>
+<div class="why"><b>Зачем email в <code>.env</code>:</b> <code>traefik.yml</code> — статический файл, который вы
+коммитите в репозиторий, поэтому реальный e-mail в нём не место (как и пароль БД в шаге <a href="#step-2-3">2.3</a>).
+CLI-флаг в <code>command:</code> имеет приоритет над файлом конфигурации, а <code>${ACME_EMAIL}</code> Docker Compose
+подставит из <code>.env</code> (шаг <a href="#step-1-1">1.1</a>) — в самом <code>traefik.yml</code> можно оставить
+плейсхолдер <code>you@example.com</code> как есть.</div>
 <pre><code>  api:
     labels:
       - "traefik.http.routers.api-secure.rule=Host(`api.example.com`)"
@@ -849,18 +905,25 @@ http:
     api-canary:
       weighted:
         services:
-          - name: api
+          - name: api@docker
             weight: 9
-          - name: api-v2
+          - name: api-v2@docker
             weight: 1
   routers:
     api-canary:
       rule: "Host(`api.localhost`)"
       entrypoints: [web]
-      service: api-canary</code></pre>
+      service: api-canary
+      priority: 10</code></pre>
 <div class="why"><b>Зачем:</b> 90/10 — типичная стартовая пропорция canary-релиза: большинство пользователей на
 проверенной версии, малая доля — на новой, под наблюдением метрик/логов. Если что-то не так — просто убираете
-<code>api-v2</code> из weighted-сервиса, без даунтайма для остальных 90%.</div>
+<code>api-v2</code> из weighted-сервиса, без даунтайма для остальных 90%. Суффикс <code>@docker</code> обязателен:
+<code>api</code>/<code>api-v2</code> объявлены Docker-labels'ами (docker provider), а сам <code>api-canary</code> —
+в этом YAML-файле (file provider), и без явного провайдера Traefik искал бы <code>api@file</code>/<code>api-v2@file</code>,
+которых не существует. У роутера <code>api</code> из шага <a href="#step-2-1">2.1</a> точно такой же <code>rule</code>
+и entrypoint — без разницы в приоритете оба правила формально равнозначны, поэтому <code>api-canary</code> получает
+явный <code>priority: 10</code>, чтобы гарантированно побеждать; либо, если хотите отключить старый роутер совсем,
+закомментируйте <code>traefik.http.routers.api.*</code> labels у сервиса <code>api</code>.</div>
 <div class="next-box"><span class="tag">ПЕРЕД ШАГОМ 3.4</span><ul><li>📖 Почитать: <a href="https://martinfowler.com/bliki/CanaryRelease.html" target="_blank">Martin Fowler: Canary Release</a>.</li></ul></div>
 </div></div>
 
@@ -917,7 +980,7 @@ http:
 <li>Зачем нужен <code>exposedByDefault=false</code>, и что произойдёт, если его не выставить?</li>
 <li>Чем Host-based routing отличается от Path-based, и зачем в последнем случае нужен StripPrefix?</li>
 <li>Как Traefik решает, какой из двух пересекающихся роутеров выигрывает?</li>
-<li>Что делает health check, и что произойдёт с реплик без него, если внутри неё завис процесс?</li>
+<li>Что делает health check, и что произойдёт с репликой без него, если внутри неё завис процесс?</li>
 <li>Почему порядок middlewares в цепочке важен? Приведите пример, когда неверный порядок маскирует настоящую ошибку.</li>
 <li>Чем mkcert отличается от Let's Encrypt, и почему для mkcert-сертификата не нужен реальный домен?</li>
 <li>Что такое HTTP-01 challenge и какое условие должно выполняться на сервере в момент выпуска сертификата?</li>
@@ -939,6 +1002,9 @@ http:
 <tr><td>mTLS между сервисами</td><td>взаимная TLS-аутентификация клиент↔Traefik↔backend</td><td>zero-trust сеть внутри кластера</td><td><a href="https://doc.traefik.io/traefik/https/mtls/" target="_blank">docs/mtls</a></td></tr>
 <tr><td>WAF / CrowdSec bouncer</td><td>middleware-плагин, блокирующий вредоносные IP на лету</td><td>защита от ботов/брутфорса перед публичным API</td><td><a href="https://plugins.traefik.io/plugins/6335346ca4caa9ddeffda116/crowdsec-bouncer-traefik-plugin" target="_blank">Traefik Plugins: CrowdSec bouncer</a></td></tr>
 </table>
+<div class="fix-box"><span class="tag">✅ НЕ УДАЛЯЙ</span>
+<p>Не удаляй папку <code>api/</code> — она понадобится в Kubernetes Lab: следующая лаба берёт оттуда готовый
+Dockerfile и <code>server.js</code> и собирает свой образ поверх них.</p></div>
 
 <h2 id="sec-14"><label class="done-label" title="Отметить раздел пройденным"><input type="checkbox" class="done" data-key="sec-14"></label>14. Ваш сервер: адаптация под meeymirita.ru / 45.10.166.23 <a class="anchor" href="#sec-14">#</a></h2>
 <p>Всё, что было выше, использовало <code>*.localhost</code> — это специальный домен, который любой компьютер сам
@@ -1036,12 +1102,16 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: ваш-настоящий-email@meeymirita.ru
+      email: you@example.com
       storage: /etc/traefik/acme/acme.json
       # ШАГ 1: сначала проверяем на staging
       caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       httpChallenge:
         entryPoint: web</code></pre>
+<pre><code># .env на сервере — реальный email, не в traefik.yml
+ACME_EMAIL=ваш-настоящий-email@meeymirita.ru</code></pre>
+<p>И, как в шаге <a href="#step-3-2">3.2</a>, переопределяем его через <code>command: - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"</code>
+в сервисе <code>traefik</code> — реальный адрес остаётся только в <code>.env</code> на сервере, а не в закоммиченном <code>traefik.yml</code>.</p>
 <div class="why"><b>Зачем блок <code>web.http.redirections</code>:</b> на реальном сайте нельзя оставлять рабочий
 HTTP рядом с HTTPS — пользователь, зашедший по старой ссылке на <code>http://meeymirita.ru</code>, должен
 автоматически попасть на <code>https://</code>. Эта настройка EntryPoint'а <code>web</code> делает редирект
@@ -1072,7 +1142,7 @@ HTTP рядом с HTTPS — пользователь, зашедший по с�
 </ol>
 <div class="fix-box"><span class="tag">✅ ЧТО ПРОВЕРИТЬ, ЕСЛИ НЕ ЗАРАБОТАЛО</span>
 <p>В таком порядке: DNS (14.2) → файрвол (14.3) → <code>docker compose logs -f traefik</code> на предмет ошибок ACME
-→ правильность <code>Host()</code> в labels (опечатка в домене — самая частая причина). Раздел <a href="#step-3-4">3.4</a>
+→ правильность <code>Host()</code> в labels (опечатка в домене — самая частая причина). Шаг <a href="#step-3-4">3.4</a>
 («Production Hell») даёт общий метод отладки по слоям provider/router/middleware/service — он применим и здесь.</p></div>
 
 </main>
