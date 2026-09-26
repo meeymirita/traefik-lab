@@ -29,4 +29,4 @@ Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API +
 
 ---
 
-Часть сборного репозитория лабораторных работ — [submodule-group-lab](https://github.com/meeymirita/submodule-group-lab).
+Часть сборного репозитория лабораторных работ — [anitech-performance](https://github.com/meeymirita/anitech-performance).
