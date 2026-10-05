@@ -1,6 +1,6 @@
 # Traefik Lab — reverse proxy, service discovery, TLS
 
-![Traefik](https://meeymirita-files.storage.yandexcloud.net/traefik/traefik.png)
+![Traefik](https://raw.githubusercontent.com/meeymirita/works-lab/main/images/traefik.png)
 
 > **24.09.2026 — методичка вычитана и исправлена.** Что найдено и что поправлено — в [fixes/devops/traefik.md](https://github.com/meeymirita/lab-fixes/blob/main/devops/traefik.md) репозитория `lab-fixes`.
 
