@@ -17,7 +17,7 @@ Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API +
 
 ## Формат
 
-Методичка [`traefik.html`](traefik.html) — открывается в браузере. Есть отдельный раздел 0 "Введение в Docker с нуля" для тех, кто раньше не работал с контейнерами.
+Методичка [`traefik.html`](traefik.html) ([открыть на сайте](https://anitech.meeymirita.ru/works/traefik.html)) — открывается в браузере. Есть отдельный раздел 0 "Введение в Docker с нуля" для тех, кто раньше не работал с контейнерами.
 
 ## Что внутри (3 сессии)
 
@@ -26,6 +26,10 @@ Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API +
 - **Сессия 3** — TLS через `mkcert` (локально) и Let's Encrypt (staging); canary-деплой (weighted round robin); "Production Hell" — финальный сценарий без подсказок
 
 Модель для понимания: `EntryPoint → Router → Middleware → Service` — весь курс выстроен вокруг этой цепочки.
+
+## Лицензия и авторство
+
+Код — MIT, тексты — CC BY 4.0, обложки и иллюстрации не покрыты (см. [LICENSE](LICENSE)). Кто что сделал: [NOTICE](NOTICE).
 
 ---
 
