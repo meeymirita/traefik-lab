@@ -34,3 +34,7 @@ Traefik 3 + Docker Compose (с заметками про Podman) + Node.js API +
 ---
 
 Часть сборного репозитория лабораторных работ — [anitech-performance](https://github.com/meeymirita/anitech-performance).
+
+## План развития
+
+План переписывания в большую лабу (11.10.2026): [`traefik_lab_plan.md`](traefik_lab_plan.md). Это план, не готовая методичка; текущая методичка `traefik.html` пока без изменений.
