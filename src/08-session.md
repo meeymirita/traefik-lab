@@ -67,7 +67,7 @@ ACME — причина, по которой «сертификаты» пере
 - Зачем нужен staging и что такое Pebble?
 
 ### links
-- https://letsencrypt.org/docs/how-it-works/ | как работает Let’s Encrypt | Let’s Encrypt: how it works
+- https://letsencrypt.org/how-it-works/ | как работает Let’s Encrypt | Let’s Encrypt: how it works
 - https://letsencrypt.org/docs/rate-limits/ | лимиты | Let’s Encrypt: rate limits
 
 ## 8.2 certificatesResolvers и HTTP-01 | short: Resolver и HTTP-01 | est: ~60 мин

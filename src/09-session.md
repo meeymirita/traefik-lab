@@ -271,7 +271,7 @@ psql "host=db.shop.localhost port=5433 user=coffee dbname=coffee sslmode=verify-
 - Зачем нужны `sslnegotiation=direct` и ALPN `postgresql` при TLS на Traefik?
 
 ### links
-- https://doc.traefik.io/traefik/reference/routing-configuration/tcp/routing/ | TCP-маршрутизация | Traefik: TCP routing
+- https://doc.traefik.io/traefik/reference/routing-configuration/tcp/service/ | TCP-маршрутизация | Traefik: TCP routing
 - https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNECT-SSLNEGOTIATION | sslnegotiation | PostgreSQL: sslnegotiation
 
 ## 9.3 UDP-роутеры: DNS-сервис | short: UDP-роутеры | est: ~40 мин
@@ -358,7 +358,7 @@ UDP-проксирование нужно нечасто (DNS, VPN вроде Wi
 - В каких задачах встречается UDP-проксирование?
 
 ### links
-- https://doc.traefik.io/traefik/reference/routing-configuration/udp/routing/ | UDP-маршрутизация | Traefik: UDP routing
+- https://doc.traefik.io/traefik/reference/routing-configuration/udp/service/ | UDP-маршрутизация | Traefik: UDP routing
 - https://coredns.io/manual/toc/ | CoreDNS | CoreDNS: manual
 
 ## 9.4 Реальный IP клиента: forwardedHeaders и proxy protocol | short: IP клиента | est: ~55 мин

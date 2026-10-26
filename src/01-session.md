@@ -104,7 +104,7 @@ Reverse proxy — **администратор на входе в бизнес-�
 
 ### links
 - https://doc.traefik.io/traefik/ | документация Traefik | Traefik Docs
-- https://developer.mozilla.org/ru/docs/Web/HTTP/Proxy_servers_and_tunneling | прокси и туннелирование | MDN: прокси-серверы
+- https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Proxy_servers_and_tunneling | прокси и туннелирование | MDN: прокси-серверы
 
 ## 1.3 Traefik, nginx, Caddy: когда что | short: Traefik, nginx, Caddy | est: ~30 мин
 ### intro
@@ -586,7 +586,7 @@ curl -s -o /dev/null -w 'adminer.shop.localhost:8081 -> HTTP %{http_code}\n' htt
 
 ### links
 - https://datatracker.ietf.org/doc/html/rfc6761#section-6.3 | RFC 6761: особые имена, localhost | RFC 6761 §6.3
-- https://everything.curl.dev/usingcurl/connections/name | имена и разрешение в curl | Everything curl: имена
+- https://everything.curl.dev/usingcurl/connections/name.html | имена и разрешение в curl | Everything curl: имена
 
 ## 1.7 🔨 Сайт не открывается по имени | short: 🔨 Не открывается по имени | est: ~35 мин
 ### intro
@@ -640,5 +640,5 @@ curl -s -o /dev/null -w 'HTTP %{http_code}\n' http://localhost:8080/menu
 - Какова последовательность вопросов, если «сайт не открывается»?
 
 ### links
-- https://everything.curl.dev/cmdline/exitcode | коды выхода curl | Everything curl: коды выхода
+- https://everything.curl.dev/cmdline/exitcode.html | коды выхода curl | Everything curl: коды выхода
 - https://developer.mozilla.org/ru/docs/Web/HTTP/Status | коды ответов HTTP | MDN: коды состояния

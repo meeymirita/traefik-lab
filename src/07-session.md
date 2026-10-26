@@ -54,7 +54,7 @@ echo | openssl s_client -connect example.com:443 -servername example.com 2>/dev/
 - Зачем клиент в начале рукопожатия сообщает имя (SNI)?
 
 ### links
-- https://developer.mozilla.org/ru/docs/Web/Security/Transport_Layer_Security | TLS | MDN: TLS
+- https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security | TLS | MDN: TLS
 - https://letsencrypt.org/ru/docs/ | Let’s Encrypt: документация | Let’s Encrypt: документация
 
 ## 7.2 mkcert: свой локальный CA | short: mkcert | est: ~45 мин
